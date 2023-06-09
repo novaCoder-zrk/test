@@ -1,10 +1,9 @@
 from flask import Flask, request
 from flask_cors import CORS
 from flask.views import MethodView
-from PIL import Image
 import base64
-import io
-import time
+
+from chatbot import ChatbotBackend
 
 app = Flask(__name__)
 CORS().init_app(app)
@@ -15,22 +14,29 @@ def hello_world():
     return 'Welcome!'
 
 
+chatbot = ChatbotBackend()
+
+
 class MessageApi(MethodView):
+
     def post(self):
         data = request.json
         message = data.get('message')
 
-        # time.sleep(5000)
+        response = chatbot.generate_response(message)
+        fig_path = None
+        if "#@@#" in response and response.endswith(".png"):
+            response, fig_path = response.split("#@@#")
+        img_base64 = None
+        if fig_path is not None:
+            with open("./img/" + fig_path, 'rb') as img_file:
+                img_base64 = base64.b64encode(img_file.read()).decode('utf-8')
 
-        with open('test.png', 'rb') as img_file:
-            img_base64 = base64.b64encode(img_file.read()).decode('utf-8')
+        reply = {'status': 'success', 'reply': response}
+        if img_base64 is not None:
+            reply['image'] = img_base64
 
-        reply = '你说：“' + message + '”。 这是一个 [链接](http://example.com)'
-        return {
-            'status': 'success',
-            'reply': reply,
-            'image': img_base64
-        }
+        return reply
 
 
 class LoginApi(MethodView):

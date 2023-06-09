@@ -1,2 +1,5 @@
 .idea
 books.sqlite
+.env
+.flaskenv
+img
