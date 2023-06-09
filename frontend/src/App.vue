@@ -2,8 +2,10 @@
     <div class="container">
         <div class="chat">
             <div v-for="(message, index) in messages" :key="index" class="message" :class="message.side">
-                <div class="content" v-html="message.content"></div>
                 <img v-if="message.image" :src="message.image" alt="Image" />
+                <div class="content" v-html="message.content"></div>
+                <!-- 加载指示器 -->
+                <div v-if="isLoading && message.side === 'right'" class="loader"></div>
             </div>
         </div>
         <div class="send-box">
@@ -15,23 +17,27 @@
 
 <script>
 import axios from 'axios';
-import MarkdownIt from 'markdown-it'
-const md = new MarkdownIt()
+import MarkdownIt from 'markdown-it';
+const md = new MarkdownIt();
 
 export default {
     data() {
         return {
             input: '',
-            messages: []
+            messages: [],
+            isLoading: false,  // 新的数据属性
         }
     },
     methods: {
         async sendMessage() {
-            if (!this.input) return;
-            this.messages.push({ side: 'right', content: this.input });
-            const {reply, image} = await this.chatbotReply(this.input);
-            this.messages.push({ side: 'left', content: reply, image });
+            const message = this.input;
             this.input = '';
+            if (!message) return;
+            this.messages.push({ side: 'right', content: message });
+            this.isLoading = true;  // 开始请求
+            this.$nextTick(this.scrollToBottom);
+            await this.chatbotReply(message);
+            this.isLoading = false;  // 请求结束
         },
         async chatbotReply(message) {
             try {
@@ -50,10 +56,11 @@ export default {
                 }
 
                 const reply = this.markdownToHtml(response.data.reply);
-
-                // 添加这一行，如果没有图片，则设置为null
                 const image = response.data.image ? 'data:image/png;base64,' + response.data.image : null;
-
+                this.messages.push({ side: 'left', content: reply, image });
+                this.$nextTick(() => {
+                    this.$nextTick(this.scrollToBottom);
+                });
                 return { reply, image };
             } catch (error) {
                 console.error(error);
@@ -63,6 +70,10 @@ export default {
         },
         markdownToHtml(markdownText) {
             return md.render(markdownText);
+        },
+        scrollToBottom() {
+            const chat = this.$el.querySelector('.chat');
+            chat.scrollTop = chat.scrollHeight;
         }
     }
 }
@@ -73,7 +84,16 @@ export default {
     box-sizing: border-box;
 }
 
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 .container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
     width: 90%;
     margin: 0 auto;
     padding: 20px 10px;
@@ -82,7 +102,7 @@ export default {
 }
 
 .chat {
-    max-height: 500px;
+    flex-grow: 1;
     overflow-y: auto;
     margin-bottom: 20px;
     padding: 20px;
@@ -96,6 +116,11 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+}
+
+.message img {
+    max-width: 50%;
+    height: auto;
 }
 
 .message .content {
@@ -150,5 +175,19 @@ export default {
     font-size: 18px;
     width: 80px;
     height: 100%;
+}
+
+.loader {
+    border: 8px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 8px solid blue;
+    width: 40px;
+    height: 40px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 </style>
