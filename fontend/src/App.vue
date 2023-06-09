@@ -35,7 +35,7 @@ export default {
         },
         async chatbotReply(message) {
             try {
-                const requestPromise = axios.post('http://localhost:5000/messages', {
+                const requestPromise = axios.post('http://localhost:16161/messages', {
                     message
                 });
 
@@ -71,23 +71,11 @@ export default {
 }
 
 .container {
-    width: 100%;
+    width: 90%;
     margin: 0 auto;
     padding: 20px 10px;
     background-color: #fff;
     font-size: 18px;
-}
-
-.login-panel {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
-
-.login-form {
-    width: 300px;
 }
 
 .chat {
@@ -100,28 +88,36 @@ export default {
     background-color: #f6f8fa;
 }
 
-.send-box {
-    display: flex;
-    justify-content: space-between;
-}
-
 .message {
     margin-bottom: 10px;
-    border-bottom: 1px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 .message .content {
     padding: 10px;
     border-radius: 5px;
     font-family: Arial, sans-serif;
+    max-width: 90%;
+}
+
+.message.right {
+    text-align: right;
+    align-items: flex-end;
 }
 
 .message.right .content {
     color: #1E88E5;
+    display: inline-block;
+    background-color: #1E88E5;
+    color: white;
 }
 
 .message.left .content {
     color: #333;
+    display: inline-block;
+    background-color: #eee;
 }
 
 .send-box {
