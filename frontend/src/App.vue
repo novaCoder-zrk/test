@@ -50,7 +50,10 @@ export default {
                 }
 
                 const reply = this.markdownToHtml(response.data.reply);
-                const image = 'data:image/png;base64,' + response.data.image;
+
+                // 添加这一行，如果没有图片，则设置为null
+                const image = response.data.image ? 'data:image/png;base64,' + response.data.image : null;
+
                 return { reply, image };
             } catch (error) {
                 console.error(error);
