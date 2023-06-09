@@ -7,8 +7,8 @@
             </div>
         </div>
         <div class="send-box">
-            <input type="text" v-model="input" @keydown.enter="sendMessage" class="send-input" placeholder="输入消息..."/>
-            <button @click="sendMessage" class="send-button">发送</button>
+            <input type="text" v-model="input" @keydown.enter="sendMessage" class="send-input" placeholder="Input your message..."/>
+            <button @click="sendMessage" class="send-button">Chat</button>
         </div>
     </div>
 </template>
@@ -40,7 +40,7 @@ export default {
                 });
 
                 const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject('后端暂时无响应，重新尝试中...'), 500000000);
+                    setTimeout(() => reject('No response, please retry.'), 500000000);
                 });
 
                 const response = await Promise.race([requestPromise, timeoutPromise]);

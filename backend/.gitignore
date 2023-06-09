@@ -3,3 +3,4 @@ books.sqlite
 .env
 .flaskenv
 img
+__pycache__
