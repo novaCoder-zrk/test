@@ -137,6 +137,7 @@ html, body {
     padding: 10px;
     border-radius: 5px;
     font-family: Arial, sans-serif;
+    width: fit-content;
     max-width: 90%;
 }
 
@@ -152,6 +153,10 @@ html, body {
 
 .message.right .content {
     order: 1;
+    color: #1E88E5;
+    display: inline-block;
+    background-color: #1E88E5;
+    color: white;
 }
 
 .message.left .content {
