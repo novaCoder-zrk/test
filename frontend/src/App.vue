@@ -2,10 +2,10 @@
     <div class="container">
         <div class="chat">
             <div v-for="(message, index) in messages" :key="index" class="message" :class="message.side">
+                <img class="avatar" :src="message.side === 'right' ? userAvatar : botAvatar" alt="Avatar" />
                 <img v-if="message.image" :src="message.image" alt="Image" />
                 <div class="content" v-html="message.content"></div>
-                <!-- 加载指示器 -->
-                <div v-if="isLoading && message.side === 'right'" class="loader"></div>
+                <div v-if="isLoading && message.side === 'right' && index === messages.length - 1" class="loader"></div>
             </div>
         </div>
         <div class="send-box">
@@ -14,6 +14,7 @@
         </div>
     </div>
 </template>
+
 
 <script>
 import axios from 'axios';
@@ -25,7 +26,9 @@ export default {
         return {
             input: '',
             messages: [],
-            isLoading: false,  // 新的数据属性
+            isLoading: false,
+            userAvatar: '/png/user.png',
+            botAvatar: '/png/bot.png',
         }
     },
     methods: {
@@ -34,10 +37,10 @@ export default {
             this.input = '';
             if (!message) return;
             this.messages.push({ side: 'right', content: message });
-            this.isLoading = true;  // 开始请求
+            this.isLoading = true;
             this.$nextTick(this.scrollToBottom);
             await this.chatbotReply(message);
-            this.isLoading = false;  // 请求结束
+            this.isLoading = false;
         },
         async chatbotReply(message) {
             try {
@@ -90,6 +93,13 @@ html, body {
     padding: 0;
 }
 
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
 .container {
     display: flex;
     flex-direction: column;
@@ -114,8 +124,8 @@ html, body {
 .message {
     margin-bottom: 10px;
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: start;
 }
 
 .message img {
@@ -131,15 +141,17 @@ html, body {
 }
 
 .message.right {
-    text-align: right;
-    align-items: flex-end;
+    justify-content: flex-end;
+}
+
+.message.right .avatar {
+    order: 2;
+    margin-left: 10px;
+    margin-right: 0;
 }
 
 .message.right .content {
-    color: #1E88E5;
-    display: inline-block;
-    background-color: #1E88E5;
-    color: white;
+    order: 1;
 }
 
 .message.left .content {
@@ -190,4 +202,5 @@ html, body {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
 </style>
