@@ -49,7 +49,7 @@ export default {
                 });
 
                 const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject('No response, please retry.'), 500000000);
+                    setTimeout(() => reject('No response, please retry.'), 5000);
                 });
 
                 const response = await Promise.race([requestPromise, timeoutPromise]);

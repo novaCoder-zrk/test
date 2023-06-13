@@ -1,3 +1,5 @@
+import time
+
 from flask import Flask, request
 from flask_cors import CORS
 from flask.views import MethodView
@@ -22,7 +24,6 @@ class MessageApi(MethodView):
     def post(self):
         data = request.json
         message = data.get('message')
-
         response = chatbot.generate_response(message)
         fig_path = None
         if "#@@#" in response and response.endswith(".png"):

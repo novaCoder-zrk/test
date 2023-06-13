@@ -57,9 +57,11 @@ def get_day_news(keywards, date):
           '&sort=RELEVANCE' + \
           '&apikey=' + os.getenv("alphavantage_key")
     r = requests.get(url)
-    data = r.json()["feed"]
+    data = r.json()
     content = ""
-    for i in data[:5]:
+    if "feed" not in data:
+        return content
+    for i in data["feed"][:5]:
         content += i['url'] + '\n' + \
                    i['summary'] + '\n\n'
     summary = get_bot_response(content)

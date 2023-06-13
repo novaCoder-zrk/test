@@ -185,8 +185,8 @@ def get_period_price(question):
     st_form = answer[1]
     ed_form = answer[2]
     sym, x_axis, y_axis = GetPrice(trg_crypto[0], st_form, ed_form).getprice()
-    print(x_axis)
-    print(y_axis)
+    # print(x_axis)
+    # print(y_axis)
     new_y_axis = []
     new_x_axis = []
     for i in range(len(y_axis) // 24):
@@ -213,13 +213,12 @@ def get_period_price(question):
 
 
 def price_plot_des(query):
-    # try:
-    fig_name = get_period_price(query)
-    # print(describe + "#" + fig_name)
-    return fig_name
-    # except:
-    #     return "We cannot understand your query for now. If you are querying the prices of crypto, " \
-    #            "please try to specific the date in the format as YYYY-mm-DD, like '2023-05-30'."
+    try:
+        fig_name = get_period_price(query)
+        return fig_name
+    except:
+        return "We cannot understand your query for now. If you are querying the prices of crypto, " \
+               "please try to specific the date in the format as YYYY-mm-DD, like '2023-05-30'."
 
 
 def show_day_price(query):

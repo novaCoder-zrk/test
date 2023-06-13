@@ -8,6 +8,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.chat_models import ChatOpenAI
 from langchain.agents import initialize_agent
+from urllib3.exceptions import MaxRetryError, SSLError
 
 from price_tools import price_plot_des, show_day_price
 from prompt import SYSTEM_PREFIX
@@ -64,11 +65,15 @@ class ChatbotBackend:
             Tool(
                 name="Search",
                 func=search.run,
-                # query expansion, spell correction, synonym mapping, and entity recognition
                 description="useful for questions that ask the news about a specific event with online search. "
-                            "You need to rewrite and expand the original query to a comma separated list of optimized and decomposed queries "
+                            "The search engine support advanced search operators including: \n"
+                            "1. '\"\"' instruct to search for the exact phrase, for example, \"Bitcoin News\" denotes the results must exactly contain the phrase \"Bitcoin News\"\n"
+                            "2. 'site:' can be added into the query to limit the results from a specific website, you can use 'site: coindesk.com', 'site: cryptonews.com' or 'site: cointelegraph.com'\n"
+                            "3. '*' can be used as a wildcard to replace unknown words in a search query, for example, searching for  'artificial * research' will return results related to 'artificial neural network research' or 'artificial intelligence ethics research' etc.\n"
+                            "You are free to use these advanced search operators or not to rewrite and expand the original query "
+                            "to a comma separated list of optimized and decomposed queries "
                             "that can better, accurately and comprehensively retrieve the desired results. "
-                            "For example, `Ethereum upgrade roadmap,next upgrade date of Ethereum,Ethereum upgrade details` would be the optimized queries for the original query 'Can you tell me about the next upgrade for Ethereum? When and what will happen?'.",
+                            "For example, `\"Ethereum upgrade roadmap\",next upgrade date of Ethereum,Ethereum upgrade details site: coindesk.com` would be the optimized queries for the original query 'Can you tell me about the next upgrade for Ethereum? When and what will happen?'.",
             ),
             Tool(
                 name="Cryptocurrency Price",
@@ -103,4 +108,21 @@ class ChatbotBackend:
     def generate_response(self, user_input):
         today_date = time.strftime('%b %d %Y', time.localtime(int(time.time())))
         user_input = f"Today is {today_date}. " + user_input
-        return self.search_chain.run(user_input).strip()
+        try:
+            response = self.search_chain.run(user_input).strip()
+        except (MaxRetryError, SSLError):
+            response = "Network error, please retry later."
+        return response
+
+
+test_cases = [
+        "When will CPI data be announced? What is the official Web site for the CPI data?",
+        "What time does the NFP (Non-Farm Payroll) report come out?",
+        "What are the dates of the next Federal Reserve meeting?",
+        "What are the dates of the next Federal Open Market Committee meeting?",
+        "Is the cryptocurrency SUI listed on any exchange? When and where was it first listed?",
+        "Did the NFT exchange platform Opensea issue any cryptocurrency?",
+        "What is the next Bitcoin halving date? What will happen after the halving?",
+        "Can you tell me about the next upgrade for Ethereum? When and what will happen?",
+        "What is the next cliff unlock date for the cryptocurrency ARB?"
+    ]
