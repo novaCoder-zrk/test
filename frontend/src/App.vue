@@ -6,7 +6,6 @@
                 <img v-if="message.image" :src="message.image" alt="Image" />
                 <div class="content" v-html="message.content"></div>
                 <div v-if="isLoading && message.side === 'right' && index === messages.length - 1" class="loader"></div>
-                <div v-if="timeout && message.side === 'right' && index === messages.length - 1" class="timeout_tip" style="padding-top: 15px;"> <span class="center-text" >No response, please retry.</span></div>
             </div>
         </div>
         <div class="send-box">
@@ -30,7 +29,7 @@ export default {
             isLoading: false,
             userAvatar: '/png/user.png',
             botAvatar: '/png/bot.png',
-            timeout: false,
+
         }
     },
     methods: {
@@ -38,7 +37,7 @@ export default {
             const message = this.input;
             this.input = '';
             if (!message) return;
-            this.timeout = false;
+
             this.messages.push({ side: 'right', content: message });
             this.isLoading = true;
             this.$nextTick(this.scrollToBottom);
@@ -70,9 +69,9 @@ export default {
                 return { reply, image };
             } catch (error) {
                 console.log("超时触发！！！")
-                this.timeout = true;
+                this.messages.push({ side: 'left', content: 'No response, please retry.' });
                 console.error(error);
-                this.sendMessage();
+                // this.sendMessage();
                 return { reply: error, image: null };
             }
         },
