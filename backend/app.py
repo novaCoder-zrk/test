@@ -11,16 +11,12 @@ from flask_socketio import SocketIO, emit
 app = Flask(__name__)
 CORS(app)
 
-
 socketio = SocketIO(app, cors_allowed_origins="*")
-
+chatbot = ChatbotBackend()
 
 @app.route('/')
 def hello_world():
     return 'Welcome!'
-
-
-chatbot = ChatbotBackend()
 
 
 @socketio.on("connect")
@@ -39,8 +35,11 @@ def handle_message(message):
     print(message['data'])
     # status example
     emit('status', {'status': 'search online'})
-    time.sleep(1)
+    print("AAAAA")
+    time.sleep(3)
     emit('status', {'status': 'LLM'})
+    print("bbbbb")
+    time.sleep(1)
 
     response = chatbot.generate_response(message['data'])
     fig_path = None
@@ -51,18 +50,18 @@ def handle_message(message):
         with open("./img/" + fig_path, 'rb') as img_file:
             img_base64 = base64.b64encode(img_file.read()).decode('utf-8')
 
-    reply = {'status': 'success', 'reply': response}
+    reply = {'status': 'success', 'question': message['data'], 'reply': response}
     if img_base64 is not None:
         reply['image'] = img_base64
 
-
+    # reply = {'status': 'success', ,
+    #          'reply': message['data']}
     emit('response', reply)
-
 
 
 @socketio.on("disconnect")
 def handle_disconnect():
-    print("disconnect")
+    print("server has  disconnected!!!")
 
 
 if __name__ == '__main__':

@@ -5,9 +5,10 @@
                 <img class="avatar" :src="message.side === 'right' ? userAvatar : botAvatar" alt="Avatar" />
                 <img v-if="message.image" :src="message.image" alt="Image" />
                 <div class="content" v-html="message.content"></div>
+                <div>
                 <div v-if=" isLoading===true && message.side === 'right' && index === messages.length - 1" class="loader"></div>
                 <span v-if=" isLoading===true && message.side === 'right' && index === messages.length - 1" class="">{{loaderTip}}</span>
-
+                </div>
             </div>
         </div>
         <div class="send-box">
@@ -33,13 +34,15 @@ let messages = ref([]);
 
 
 let socket = io.connect('http://127.0.0.1:16161');
-
+let lastQuestion;
 socket.on('connect', function() {
     console.log("connected！")
 });
 
 socket.on('response',function(msg){
     console.log(msg)
+    if(msg.question !== lastQuestion)
+        return;
     const image = msg.image ? 'data:image/png;base64,' + msg.image : null;
     messages.value.push({ side: 'left', content: msg.reply, image });
     isLoading.value = false;
@@ -56,6 +59,7 @@ socket.on('timeout',function(msg){
     isLoading.value = false;
 });
 socket.on('disconnect', function() {
+
     console.log('已断开与服务器的连接');
 });
 
@@ -65,6 +69,7 @@ socket.on('disconnect', function() {
 function sendMessage() {
     const msg = input.value;
     input.value = '';
+    lastQuestion = msg;
     if (!msg) return;
     messages.value.push({ side: 'right', content: msg });
     console.log("111")
@@ -78,8 +83,9 @@ function sendMessage() {
 
 function chatbotReply(msg) {
     try {
+        //socket.disconnect();
         // 建立socket链接
-
+        socket.connect();
         socket.emit('message', {"data": msg});
 
     } catch (error) {
@@ -219,11 +225,11 @@ html, body {
 
 }
 .loader {
-    border: 8px solid #f3f3f3;
+    border: 4px solid #f3f3f3;
     border-radius: 50%;
-    border-top: 8px solid blue;
-    width: 40px;
-    height: 40px;
+    border-top: 4px solid blue;
+    width: 20px;
+    height: 20px;
     animation: spin 2s linear infinite;
 }
 
