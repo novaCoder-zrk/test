@@ -31,8 +31,8 @@ let userAvatar = ref('/png/user.png');
 let botAvatar =  ref('/png/bot.png');
 let input = ref('');
 let messages = ref([]);
-
-
+let timerId;
+let delay = 30000;
 let socket = io.connect('http://127.0.0.1:16161');
 let lastQuestion;
 socket.on('connect', function() {
@@ -40,12 +40,15 @@ socket.on('connect', function() {
 });
 
 socket.on('response',function(msg){
+
     console.log(msg)
     if(msg.question !== lastQuestion)
         return;
     const image = msg.image ? 'data:image/png;base64,' + msg.image : null;
     messages.value.push({ side: 'left', content: msg.reply, image });
     isLoading.value = false;
+    lastQuestion = "";
+    clearTimeout(timerId);
 });
 
 socket.on('status',function(msg){
@@ -81,17 +84,22 @@ function sendMessage() {
     console.log("22")
 }
 
+function myFunction() {
+    console.log("定时器到期，执行函数");
+    lastQuestion = "";
+    messages.value.push({ side: 'left', content: "No response, please retry." });
+    isLoading.value = false;
+}
+
 function chatbotReply(msg) {
     try {
-        //socket.disconnect();
         // 建立socket链接
+        timerId = setTimeout(myFunction, delay);
         socket.connect();
         socket.emit('message', {"data": msg});
-
     } catch (error) {
         console.error(error);
         this.sendMessage();
-        // return { reply: error, image: null };
     }
 }
 
