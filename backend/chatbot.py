@@ -56,7 +56,7 @@ class ChatbotBackend:
             self.reset_llm()
 
     def create_search_chatbot(self, seed_memory=None):
-        self.llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.3, openai_api_key=self.api_key)
+        self.llm = ChatOpenAI(model_name="gpt-3.5-turbo-0613", temperature=0.3, openai_api_key=self.api_key)
         self.memory = seed_memory if seed_memory is not None else ConversationBufferWindowMemory(k=5,
                                                                                                  memory_key="chat_history",
                                                                                                  return_messages=True)

@@ -24,6 +24,7 @@ class MessageApi(MethodView):
     def post(self):
         data = request.json
         message = data.get('message')
+        print("Query: ", message)
         response = chatbot.generate_response(message)
         fig_path = None
         if "#@@#" in response and response.endswith(".png"):

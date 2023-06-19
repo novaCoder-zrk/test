@@ -46,7 +46,7 @@ export default {
         },
         async chatbotReply(message) {
             try {
-                const requestPromise = axios.post('http://127.0.0.1:16161/messages', {
+                const requestPromise = axios.post('http://54.206.93.57:16161/messages', {
                     message
                 });
 
