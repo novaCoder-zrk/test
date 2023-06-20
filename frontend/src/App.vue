@@ -45,7 +45,8 @@ socket.on('response',function(msg){
     if(msg.question !== lastQuestion)
         return;
     const image = msg.image ? 'data:image/png;base64,' + msg.image : null;
-    messages.value.push({ side: 'left', content: msg.reply, image });
+    const reply = markdownToHtml(msg.reply);
+    messages.value.push({ side: 'left', content: reply, image });
     isLoading.value = false;
     lastQuestion = "";
     clearTimeout(timerId);
