@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional
 import aiohttp
 import requests
 from dotenv import load_dotenv
+from flask_socketio import emit
 from pydantic.class_validators import root_validator
 from pydantic.main import BaseModel
 
@@ -198,6 +199,7 @@ class MultiGoogleSearchTool:
     search_engine = GoogleSerperAPIWrapper()
 
     def run(self, query):
+        emit('status', {'status': 'Online Search'})
         query = query.split(",")
         all_ret = []
         for q in query:
@@ -206,4 +208,5 @@ class MultiGoogleSearchTool:
         res += SEARCH_INSTRUCTION
         today_date = time.strftime('%b %d %Y', time.localtime(int(time.time())))
         res += f"\n\nBe careful about the date or live event mentioned in the above searched result, as it might be outdated. You should be aware that the correct current date is {today_date}. If the current date can assist in providing a more accurate and precise answer to the user's query, please incorporate it along with the aforementioned information. However, if the current date is not relevant or necessary for addressing the query, there is no need to mention it.\n\n"
+        emit('status', {'status': 'LLM'})
         return res

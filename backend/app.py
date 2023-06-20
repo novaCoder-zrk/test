@@ -14,6 +14,7 @@ CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 chatbot = ChatbotBackend()
 
+
 @app.route('/')
 def hello_world():
     return 'Welcome!'
@@ -33,14 +34,6 @@ def timeOut():
 def handle_message(message):
     print(message)
     print(message['data'])
-    # status example
-    emit('status', {'status': 'search online'})
-    print("AAAAA")
-    time.sleep(3)
-    emit('status', {'status': 'LLM'})
-    print("bbbbb")
-    time.sleep(1)
-
     response = chatbot.generate_response(message['data'])
     fig_path = None
     if "#@@#" in response and response.endswith(".png"):

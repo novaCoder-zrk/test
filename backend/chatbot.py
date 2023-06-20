@@ -3,6 +3,7 @@ import time
 
 import requests
 from dotenv import load_dotenv
+from flask_socketio import emit
 from langchain.agents import Tool, AgentType
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.memory import ConversationBufferWindowMemory
@@ -106,6 +107,7 @@ class ChatbotBackend:
                                              agent_kwargs={"system_message": SYSTEM_PREFIX})
 
     def generate_response(self, user_input):
+        emit('status', {'status': 'LLM'})
         today_date = time.strftime('%b %d %Y', time.localtime(int(time.time())))
         user_input = f"Today is {today_date}. " + user_input
         try:
@@ -116,13 +118,13 @@ class ChatbotBackend:
 
 
 test_cases = [
-        "When will CPI data be announced? What is the official Web site for the CPI data?",
-        "What time does the NFP (Non-Farm Payroll) report come out?",
-        "What are the dates of the next Federal Reserve meeting?",
-        "What are the dates of the next Federal Open Market Committee meeting?",
-        "Is the cryptocurrency SUI listed on any exchange? When and where was it first listed?",
-        "Did the NFT exchange platform Opensea issue any cryptocurrency?",
-        "What is the next Bitcoin halving date? What will happen after the halving?",
-        "Can you tell me about the next upgrade for Ethereum? When and what will happen?",
-        "What is the next cliff unlock date for the cryptocurrency ARB?"
-    ]
+    "When will CPI data be announced? What is the official Web site for the CPI data?",
+    "What time does the NFP (Non-Farm Payroll) report come out?",
+    "What are the dates of the next Federal Reserve meeting?",
+    "What are the dates of the next Federal Open Market Committee meeting?",
+    "Is the cryptocurrency SUI listed on any exchange? When and where was it first listed?",
+    "Did the NFT exchange platform Opensea issue any cryptocurrency?",
+    "What is the next Bitcoin halving date? What will happen after the halving?",
+    "Can you tell me about the next upgrade for Ethereum? When and what will happen?",
+    "What is the next cliff unlock date for the cryptocurrency ARB?"
+]

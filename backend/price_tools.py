@@ -7,6 +7,7 @@ import openai
 import pandas as pd
 import pytz
 from dotenv import load_dotenv
+from flask_socketio import emit
 from requests import Session
 
 import matplotlib.pyplot as plt
@@ -214,6 +215,7 @@ def get_period_price(question):
 
 def price_plot_des(query):
     try:
+        emit('status', {'status': 'Crypto Price Search'})
         fig_name = get_period_price(query)
         return fig_name
     except:
@@ -223,6 +225,7 @@ def price_plot_des(query):
 
 def show_day_price(query):
     try:
+        emit('status', {'status': 'Crypto Price&News Search'})
         output, news_summary = get_day_price(query)
         news_summary = news_summary.replace("#", "")
         return news_summary + output
