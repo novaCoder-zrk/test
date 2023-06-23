@@ -1,19 +1,3 @@
-<template>
-    <div class="login-container">
-        <h1 class="title">Welcome!</h1>
-        <div class="login-form">
-            <label class="label">Username</label>
-            <input  class="input" type="text" placeholder="Enter your username" id="username" v-model="username"/>
-
-            <label class="label">Password</label>
-            <input  class="input" type="password" placeholder="Enter your password" id="password" v-model="password"/>
-            <span style="margin-top: 3rem;color: gray; ">Don't have an account? <router-link to="/register">sign up</router-link></span>
-            <span style="margin-top: 0.5rem;color: gray;">Forgot password? <router-link to="/resetpassword">click here</router-link></span>
-        </div>
-        <button class="login-button" @click="handleLogin">Sign In</button>
-    </div>
-</template>
-
 <script setup>
 import {reactive, ref} from 'vue'
 import { useRouter } from 'vue-router'
@@ -21,13 +5,31 @@ const router = useRouter()
 
 let username = ref("");
 let password = ref("");
-function handleLogin(){
+let email = ref("");
+function handleSignUp(){
     if( username.value !== "")
-        router.push(`/chatbot/`+username.value)
+        router.push(`/login`)
 }
 
 
 </script>
+
+<template>
+    <div class="login-container">
+        <h1 class="title">Sign Up!</h1>
+        <div class="register-form">
+            <label class="label">Username</label>
+            <input  class="input" type="text" placeholder="Enter your username" id="username" v-model="username"/>
+            <label class="label">Email</label>
+            <input  class="input" type="text" placeholder="Enter your email" id="email" v-model="email"/>
+            <label class="label">Password</label>
+            <input  class="input" type="password" placeholder="Enter your password" id="password" v-model="password"/>
+            <input  class="input" type="password" placeholder="Repeat your password" id="password" v-model="password"/>
+        </div>
+        <button class="login-button" @click="handleSignUp">Sign Up</button>
+    </div>
+</template>
+
 <style>
 .login-container {
     display: flex;
@@ -45,7 +47,7 @@ function handleLogin(){
     margin-bottom: 2rem;
 }
 
-.login-form {
+.register-form {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -61,7 +63,7 @@ function handleLogin(){
 .label {
     font-size: 1.2rem;
     font-weight: bold;
-    margin-top: 2rem;
+    margin-bottom: 0.5rem;
     color: #2196f3;
 }
 

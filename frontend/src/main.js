@@ -2,6 +2,8 @@ import {createApp} from 'vue'
 import App from './App.vue'
 import Login from '/src/view/Login.vue'
 import Chatbot from '/src/view/Chatbot.vue'
+import Register from '/src/view/register.vue'
+import Resetpassword from '/src/view/Resetpassword.vue'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import {createRouter, createWebHashHistory} from "vue-router";
@@ -11,6 +13,16 @@ const routes = [
         path: '/login',
         name: 'Login',
         component: Login,
+    },
+    {
+        path: '/register',
+        name: 'Register',
+        component: Register,
+    },
+    {
+        path: '/resetpassword',
+        name: 'Resetpassword',
+        component: Resetpassword,
     },
     {
         path: '/chatbot/:username',
