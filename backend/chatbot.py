@@ -1,10 +1,14 @@
 import os
 import time
 
+import langchain
 import requests
 from dotenv import load_dotenv
 from flask_socketio import emit
+from langchain import PromptTemplate
 from langchain.agents import Tool, AgentType
+from langchain.cache import SQLiteCache
+from langchain.callbacks import get_openai_callback
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.chat_models import ChatOpenAI
@@ -52,12 +56,13 @@ class ChatbotBackend:
             self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
             self.api_key = api_key
             self.create_search_chatbot()
+            langchain.llm_cache = SQLiteCache(database_path=".langchain.db")
         else:
             print("Something went wrong, check your API key.")
             self.reset_llm()
 
     def create_search_chatbot(self, seed_memory=None):
-        self.llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.3, openai_api_key=self.api_key)
+        self.llm = ChatOpenAI(model_name="gpt-3.5-turbo-0613", temperature=0.3, openai_api_key=self.api_key)
         self.memory = seed_memory if seed_memory is not None else ConversationBufferWindowMemory(k=5,
                                                                                                  memory_key="chat_history",
                                                                                                  return_messages=True)
@@ -103,15 +108,28 @@ class ChatbotBackend:
         ]
 
         self.search_chain = initialize_agent(tools, self.llm, agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
-                                             verbose=True, memory=self.memory,
+                                             verbose=True, memory=self.memory, max_iterations=2,
+                                             early_stopping_method="generate",
                                              agent_kwargs={"system_message": SYSTEM_PREFIX})
+
+    def _get_datetime(self):
+        return time.strftime('%b %d %Y', time.localtime(int(time.time())))
 
     def generate_response(self, user_input):
         emit('status', {'status': 'LLM'})
-        today_date = time.strftime('%b %d %Y', time.localtime(int(time.time())))
-        user_input = f"Today is {today_date}. " + user_input
+        prompt = PromptTemplate(
+            template="Today is {date}. {query}",
+            input_variables=["date", "query"],
+            partial_variables={"date": self._get_datetime}
+        )
+        user_input = prompt.format(query=user_input)
         try:
-            response = self.search_chain.run(user_input).strip()
+            with get_openai_callback() as cb:
+                response = self.search_chain.run(user_input).strip()
+                print(f"\n{'#' * 15}\nTotal Tokens: {cb.total_tokens}")
+                print(f"Prompt Tokens: {cb.prompt_tokens}")
+                print(f"Completion Tokens: {cb.completion_tokens}")
+                print(f"Total Cost (USD): ${cb.total_cost}\n{'#' * 15}\n")
         except (MaxRetryError, SSLError):
             response = "Network error, please retry later."
         return response
