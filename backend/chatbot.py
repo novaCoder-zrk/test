@@ -1,20 +1,21 @@
 import os
 import time
-
+from loguru import logger
 import langchain
 import requests
 from dotenv import load_dotenv
 from flask_socketio import emit
 from langchain import PromptTemplate
-from langchain.agents import Tool, AgentType
+from langchain.agents import Tool, AgentType, ConversationalChatAgent
 from langchain.cache import SQLiteCache
-from langchain.callbacks import get_openai_callback
+from langchain.callbacks import get_openai_callback, FileCallbackHandler
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.chat_models import ChatOpenAI
 from langchain.agents import initialize_agent
 from urllib3.exceptions import MaxRetryError, SSLError
 
+from log_handler import LogCallbackHandler
 from price_tools import price_plot_des, show_day_price
 from prompt import SYSTEM_PREFIX
 from search_tool import MultiGoogleSearchTool
@@ -62,6 +63,9 @@ class ChatbotBackend:
             self.reset_llm()
 
     def create_search_chatbot(self, seed_memory=None):
+        logfile = f"log/{time.strftime('%Y-%m-%d', time.localtime(int(time.time())))}.log"
+        logger.add(logfile, colorize=True, enqueue=True)
+        handler = LogCallbackHandler(logfile)
         self.llm = ChatOpenAI(model_name="gpt-3.5-turbo-0613", temperature=0.3, openai_api_key=self.api_key)
         self.memory = seed_memory if seed_memory is not None else ConversationBufferWindowMemory(k=5,
                                                                                                  memory_key="chat_history",
@@ -109,7 +113,7 @@ class ChatbotBackend:
 
         self.search_chain = initialize_agent(tools, self.llm, agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
                                              verbose=True, memory=self.memory, max_iterations=2,
-                                             early_stopping_method="generate",
+                                             early_stopping_method="generate", callbacks=[handler],
                                              agent_kwargs={"system_message": SYSTEM_PREFIX})
 
     def _get_datetime(self):
