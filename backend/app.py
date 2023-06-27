@@ -74,6 +74,32 @@ class VerifyTokenApi(MethodView):
         return jsonify({"isValid": True})
 
 
+class RegisterApi(MethodView):
+    def post(self):
+        invitecode = request.json.get('invitecode')
+        account = request.json.get('account')
+        password = request.json.get('password')
+        email = request.json.get('email')
+
+        data = pd.read_excel('account.xlsx')
+        match = data[data['invitecode'] == invitecode]
+
+        if match.empty:
+            response = {'message': 'code does not exist'}
+        else:
+            row = match.iloc[0]
+            if pd.isnull(row['account']) and pd.isnull(row['password']) and pd.isnull(row['email']):
+                data.loc[data['invitecode'] == invitecode, ['account', 'password', 'email']] = [account, password, email]
+                data.to_excel('account.xlsx', index=False)
+                response = {'message': 'Registration successful'}
+            else:
+                response = {'message': 'code has been used'}
+
+        return response
+
+register_api = RegisterApi.as_view('register_api')
+app.add_url_rule('/register', view_func=register_api, methods=['POST'])
+
 login_api = LoginApi.as_view('login_api')
 app.add_url_rule('/login', view_func=login_api, methods=['POST'])
 
