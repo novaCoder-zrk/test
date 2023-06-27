@@ -1,6 +1,6 @@
 <template>
     <div class="login-container">
-        <h1 class="title">Welcome!</h1>
+        <h1 class="title">Welcome to Chatbot!</h1>
         <div class="login-form">
             <label class="label">Username</label>
             <input  class="input" type="text" placeholder="Enter your username" id="username" v-model="username"/>
@@ -9,6 +9,8 @@
             <input  class="input" type="password" placeholder="Enter your password" id="password" v-model="password"/>
             <span style="margin-top: 3rem;color: gray; ">Don't have an account? <router-link to="/register">sign up</router-link></span>
             <span style="margin-top: 0.5rem;color: gray;">Forgot password? <router-link to="/resetpassword">click here</router-link></span>
+
+            <p class="error" v-if="errorMessage">{{ errorMessage }}</p>
         </div>
         <button class="login-button" @click="handleLogin">Sign In</button>
     </div>
@@ -16,19 +18,45 @@
 
 <script setup>
 import {reactive, ref} from 'vue'
-import { useRouter } from 'vue-router'
+import axios from 'axios'
+import {useRouter} from 'vue-router'
 const router = useRouter()
+
+const myUrl = "http://localhost:16161";
+// const myUrl = "http://54.206.93.57:16161";
 
 let username = ref("");
 let password = ref("");
-function handleLogin(){
-    if( username.value !== "")
-        router.push(`/chatbot/`+username.value)
+let errorMessage = ref("");
+
+function handleLogin() {
+    // 发送登录请求
+    axios.post(myUrl+'/login', { account: username.value, password: password.value })
+        .then(response => {
+            const { invitecode, token } = response.data;
+            if (invitecode === 'default') {
+                console.log('Login failed');
+                errorMessage.value = "Login failed, please check your username and password.";
+            } else {
+                localStorage.setItem('token', token);
+                router.push(`/chatbot/${invitecode}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            errorMessage.value = "An error occurred, please try again later.";
+        });
 }
 
-
 </script>
+
 <style>
+/* 添加一个错误消息的样式 */
+.error {
+    color: red;
+    margin-top: 1rem;
+}
+
 .login-container {
     display: flex;
     flex-direction: column;
