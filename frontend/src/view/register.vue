@@ -84,7 +84,7 @@ function handleBackToLogin() {
     align-items: center;
     justify-content: center;
     width: 400px;
-    height: 500px;
+    height: 525px;
     background-color: #fff;
     border-radius: 8px;
     padding: 2rem;

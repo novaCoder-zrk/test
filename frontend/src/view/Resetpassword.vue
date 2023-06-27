@@ -1,22 +1,3 @@
-<script setup>
-import {reactive, ref} from 'vue'
-import { useRouter } from 'vue-router'
-const router = useRouter()
-
-let username = ref("");
-let password = ref("");
-let verifycode = ref("");
-function handleSend(){
-    if( username.value !== "")
-        router.push(`/chatbot/`+username.value)
-}
-
-function handleReset(){
-    if( username.value !== "")
-        router.push(`/chatbot/`+username.value)
-}
-</script>
-
 <template>
     <div class="login-container">
         <h1 class="title">Reset Password!</h1>
@@ -36,6 +17,25 @@ function handleReset(){
         <button class="login-button" @click="handleReset">Reset Password</button>
     </div>
 </template>
+
+<script setup>
+import {reactive, ref} from 'vue'
+import {useRouter} from 'vue-router'
+const router = useRouter()
+
+let username = ref("");
+let password = ref("");
+let verifycode = ref("");
+function handleSend(){
+    if( username.value !== "")
+        router.push(`/chatbot/`+username.value)
+}
+
+function handleReset(){
+    if( username.value !== "")
+        router.push(`/chatbot/`+username.value)
+}
+</script>
 
 <style>
 .login-container {
