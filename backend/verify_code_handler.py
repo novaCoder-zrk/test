@@ -65,11 +65,16 @@ def check_verify_code(username, verify_code):
             new_verify_time = last_verify_time - datetime.timedelta(minutes=10)
             df.loc[mask, 'verify_time'] = new_verify_time
             df.to_excel('account.xlsx', index=False)
+
             print("认证成功")
+            return True
         else:
             print("认证失败")
+
     else:
         print("时间差大于等于5分钟")
 
+    return False
+
 #code = get_verify_code('user1')
-check_verify_code('user1','cof7Wy')
+#check_verify_code('user1','cof7Wy')
