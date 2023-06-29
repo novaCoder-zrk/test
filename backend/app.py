@@ -6,6 +6,8 @@ from flask_socketio import SocketIO, emit
 from flask.views import MethodView
 import pandas as pd
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from email_sender import send_verify_code
+from verify_code_handler import check_verify_code
 
 app = Flask(__name__)
 CORS(app)
@@ -97,6 +99,34 @@ class RegisterApi(MethodView):
 
         return response
 
+
+class SendVerifyCodeApi(MethodView):
+    def post(self):
+        try:
+            account = request.json.get('account')
+            send_verify_code(account)
+            response = {'message': 'success'}
+        except Exception as e:
+            print('Error sending verify code email:', e)
+            response = {'message': 'fail'}
+        return response
+
+
+class ResetPassword(MethodView):
+    def post(self):
+        account = request.json.get('account')
+        verify_code = request.json.get('verify_code')
+        password = request.json.get('password')
+        if check_verify_code(account, verify_code):
+            df = pd.read_excel('account.xlsx')
+            mask = df['account'] == account
+            df.loc[mask, 'password'] = password
+            df.to_excel('account.xlsx', index=False)
+            return {'message': 'success'}
+
+        return {'message': 'fail'}
+
+
 register_api = RegisterApi.as_view('register_api')
 app.add_url_rule('/register', view_func=register_api, methods=['POST'])
 
@@ -106,6 +136,11 @@ app.add_url_rule('/login', view_func=login_api, methods=['POST'])
 verify_token_api = VerifyTokenApi.as_view('verify_token_api')
 app.add_url_rule('/verifyToken', view_func=verify_token_api, methods=['POST'])
 
+send_verify_code_api = SendVerifyCodeApi.as_view('send_verify_code_api')
+app.add_url_rule('/sendVerifyCode', view_func=send_verify_code_api, methods=['POST'])
+
+reset_password_api = ResetPassword.as_view('reset_password_api')
+app.add_url_rule('/resetPassword', view_func=reset_password_api, methods=['POST'])
 
 if __name__ == '__main__':
     app.run()

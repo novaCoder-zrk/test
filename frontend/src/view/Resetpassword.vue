@@ -4,15 +4,14 @@
         <div class="reset-form">
             <label class="label">Username</label>
             <input  class="input" type="text" placeholder="Enter your username" id="username" v-model="username"/>
-            <label class="label">Email</label>
+            <label class="label">Verify Code</label>
             <div class="email-form">
-                <input  class="email-input" type="text" placeholder="Enter your email" id="email" v-model="email"/>
+                <input  class="email-input" type="text" placeholder="Enter verify code" id="email" v-model="verifyCode"/>
                 <button class="send-email-button" @click="handleSend">Send Email</button>
             </div>
-            <input  class="input" type="text" placeholder="Enter verify code" id="verify" v-model="verifycode"/>
             <label class="label">Password</label>
-            <input  class="input" type="password" placeholder="Enter your new password" id="password" v-model="password"/>
-            <input  class="input" type="password" placeholder="Repeat your new password" id="password" v-model="password"/>
+            <input  class="input" type="password" placeholder="Enter your new password"  v-model="password1"/>
+            <input  class="input" type="password" placeholder="Repeat your new password"  v-model="password2"/>
         </div>
         <button class="login-button" @click="handleReset">Reset Password</button>
     </div>
@@ -22,18 +21,52 @@
 import {reactive, ref} from 'vue'
 import {useRouter} from 'vue-router'
 const router = useRouter()
+import axios from 'axios'
 
 let username = ref("");
-let password = ref("");
-let verifycode = ref("");
+let password1 = ref("");
+let password2 = ref("");
+let verifyCode = ref("");
+const myUrl = "http://localhost:16161";
+
 function handleSend(){
-    if( username.value !== "")
-        router.push(`/chatbot/`+username.value)
+    if( username.value !== ""){
+        axios.post(myUrl+'/sendVerifyCode', {
+            account: username.value,
+        })
+            .then(response => {
+                const message = response.data.message;
+                if (message === 'success')
+                    console.log("have send!")
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+    }
+
 }
 
 function handleReset(){
-    if( username.value !== "")
-        router.push(`/chatbot/`+username.value)
+    if(password1.value !== password2.value) {
+        console.log("密码不一致")
+        return;
+    }else{
+        axios.post(myUrl+'/resetPassword', {
+            account: username.value,
+            verify_code: verifyCode.value,
+            password: password1.value,
+        })
+            .then(response => {
+                const message = response.data.message;
+                if (message === 'success')
+                    console.log("reset success")
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
 }
 </script>
 
