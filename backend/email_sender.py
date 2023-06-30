@@ -43,6 +43,7 @@ def sending(recipient, verify_code):
 def send_verify_code(username):
     df = pd.read_excel('account.xlsx')
     mask = df["account"] == username
+
     user_data = df.loc[mask]
     user_email = user_data['email'].values[0]
     print(user_email)

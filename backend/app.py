@@ -104,8 +104,16 @@ class SendVerifyCodeApi(MethodView):
     def post(self):
         try:
             account = request.json.get('account')
-            send_verify_code(account)
-            response = {'message': 'success'}
+            df = pd.read_excel('account.xlsx')
+            mask = df["account"] == account
+            user_data = df[mask]
+
+            if user_data.empty:
+                # 没有对应的账户
+                response = {'message': 'fail'}
+            else:
+                send_verify_code(account)
+                response = {'message': 'success'}
         except Exception as e:
             print('Error sending verify code email:', e)
             response = {'message': 'fail'}
