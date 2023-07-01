@@ -22,8 +22,8 @@ import axios from 'axios'
 import {useRouter} from 'vue-router'
 const router = useRouter()
 
-const myUrl = "http://localhost:16161";
-// const myUrl = "http://54.206.93.57:16161";
+// const myUrl = "http://localhost:16161";
+const myUrl = "http://54.206.93.57:16161";
 
 let username = ref("");
 let password = ref("");
