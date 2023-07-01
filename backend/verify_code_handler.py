@@ -46,6 +46,36 @@ def get_verify_code(username):
     return code
 
 
+def check_verify_code_register(username, verify_code):
+    df = pd.read_excel('register_waiting_list.xlsx')
+    mask = df["account"] == username
+    user_data = df.loc[mask]
+    last_verify_time = user_data['verify_time'].values[0]
+    last_verify_time = datetime.datetime.utcfromtimestamp(last_verify_time.astype('O') / 1e9)
+
+    print(last_verify_time)
+    last_verify_code = user_data['verify_code'].values[0]
+    print(last_verify_code)
+    dt_now = datetime.datetime.now()
+    diff = dt_now - last_verify_time
+    if diff < datetime.timedelta(minutes=5):
+        print("时间差小于5分钟")
+        if verify_code == last_verify_code:
+            # 让认证码失效
+            new_verify_time = last_verify_time - datetime.timedelta(minutes=10)
+            df.loc[mask, 'verify_time'] = new_verify_time
+            df.to_excel('register_waiting_list.xlsx', index=False)
+
+            print("认证成功")
+            return True
+        else:
+            print("认证失败")
+
+    else:
+        print("时间差大于等于5分钟")
+
+    return False
+
 def check_verify_code(username, verify_code):
     df = pd.read_excel('account.xlsx')
     mask = df["account"] == username

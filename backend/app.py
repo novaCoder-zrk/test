@@ -6,8 +6,9 @@ from flask_socketio import SocketIO, emit
 from flask.views import MethodView
 import pandas as pd
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-from email_sender import send_verify_code
-from verify_code_handler import check_verify_code
+from email_sender import send_verify_code, sending
+from verify_code_handler import check_verify_code, generate_verify_code, check_verify_code_register
+import datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -15,8 +16,8 @@ app.config["JWT_SECRET_KEY"] = "your-secret-key"
 jwt = JWTManager(app)
 
 socketio = SocketIO(app, cors_allowed_origins="*")
-chatbot = ChatbotBackend()
-
+# chatbot = ChatbotBackend()
+chatbot = None
 @app.route('/')
 def hello_world():
     return 'Welcome!'
@@ -82,9 +83,21 @@ class RegisterApi(MethodView):
         account = request.json.get('account')
         password = request.json.get('password')
         email = request.json.get('email')
+        verify_code = request.json.get('verify_code')
 
         data = pd.read_excel('account.xlsx')
         match = data[data['invitecode'] == invitecode]
+
+        wl_df = pd.read_excel('register_waiting_list.xlsx')
+        mask_wl = wl_df['account'] == account
+        if mask_wl.empty:
+            response = {'message': 'wrong verify code'}
+            return response
+
+        if not check_verify_code_register(account, verify_code):
+            response = {'message': 'wrong verify code'}
+            return response
+
 
         if match.empty:
             response = {'message': 'code does not exist'}
@@ -106,9 +119,9 @@ class SendVerifyCodeApi(MethodView):
             account = request.json.get('account')
             df = pd.read_excel('account.xlsx')
             mask = df["account"] == account
-            user_data = df[mask]
+            user_data = df.loc[mask]
 
-            if user_data.empty:
+            if user_data.empty or mask.empty:
                 # 没有对应的账户
                 response = {'message': 'fail'}
             else:
@@ -118,6 +131,40 @@ class SendVerifyCodeApi(MethodView):
             print('Error sending verify code email:', e)
             response = {'message': 'fail'}
         return response
+
+
+class SendVerifyCodeByEmailApi(MethodView):
+    def post(self):
+        try:
+            account = request.json.get('account')
+            print(account)
+            email = request.json.get('email')
+            print(email)
+            df = pd.read_excel('register_waiting_list.xlsx')
+            mask = df["account"] == account
+            user_data = df[mask]
+            if mask.empty or user_data.empty:
+                print("true")
+                df.loc[len(df),'account'] = account
+            print(df)
+            mask = df["account"] == account
+            df.loc[mask, 'email'] = email
+            code = generate_verify_code()
+            dt = datetime.datetime.now()  # 获取当前时间
+            print(dt)
+            dt_str = dt.strftime('%Y-%m-%d %H:%M:%S')
+            df.loc[mask, 'verify_code'] = code
+            df.loc[mask, 'verify_time'] = dt_str
+            print(df)
+            df.to_excel('register_waiting_list.xlsx', index=False)
+            sending(email, code)
+            response = {'message': 'success'}
+            return response
+        except Exception as e:
+            print('Error sending verify code email:', e)
+            response = {'message': 'fail'}
+            return response
+
 
 
 class ResetPassword(MethodView):
@@ -146,6 +193,9 @@ app.add_url_rule('/verifyToken', view_func=verify_token_api, methods=['POST'])
 
 send_verify_code_api = SendVerifyCodeApi.as_view('send_verify_code_api')
 app.add_url_rule('/sendVerifyCode', view_func=send_verify_code_api, methods=['POST'])
+
+send_verify_code_by_email_api = SendVerifyCodeByEmailApi.as_view('send_verify_code_by_email_api')
+app.add_url_rule('/sendVerifyCodeByEmail', view_func=send_verify_code_by_email_api, methods=['POST'])
 
 reset_password_api = ResetPassword.as_view('reset_password_api')
 app.add_url_rule('/resetPassword', view_func=reset_password_api, methods=['POST'])

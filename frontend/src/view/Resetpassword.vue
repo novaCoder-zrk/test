@@ -3,14 +3,14 @@
 
         <h1 class="title">Reset Password!</h1>
         <div class="reset-form">
-            <img class="icon"  @click="handleBackToLogin"  src="../assets/back.svg" />
+            <img class="icon"  @click="handleBackToLogin"  src="../assets/back.svg"  alt="go back"/>
             <label class="label">Username</label>
             <input  class="input" type="text" placeholder="Enter your username" id="username" v-model="username"/>
             <span class="illegalText">{{accountErrorText}}</span>
             <label class="label">Verify Code</label>
             <div class="email-form">
                 <input  class="email-input" type="text" placeholder="Enter verify code" id="email" v-model="verifyCode"/>
-                <button class="send-email-button" @click="handleSend">{{sendButton}}</button>
+                <button class="send-email-button" @click="handleSend" id="send_email">{{sendButton}}</button>
             </div>
             <span class="illegalText">{{codeErrorText}}</span>
             <label class="label">Password</label>
@@ -57,6 +57,8 @@ function myFunction() {
     }else{
         sendAble = true;
         sendButton.value="Send Email";
+        const send_email = document.getElementById('send_email');
+        send_email.style.backgroundColor = '#4f46e5';
         clearInterval(timerId);
     }
 }
@@ -67,6 +69,8 @@ function handleSend(){
     accountErrorText.value = "";
     sendAble = false;
     sendButton.value="60 s";
+    const send_email = document.getElementById('send_email');
+    send_email.style.backgroundColor = 'grey';
     clearInterval(timerId);
     countDown = 60;
     timerId = setInterval(myFunction, 1000);
@@ -80,6 +84,7 @@ function handleSend(){
                     console.log("have send!")
                 }
                 else {
+                    sendAble = true;
                     sendButton.value="Send Email";
                     accountErrorText.value = "no account";
                     clearInterval(timerId);
@@ -223,6 +228,8 @@ function handleReset(){
     cursor: pointer;
     margin-bottom: 1rem;
 }
+
+
 
 .icon{
     position: absolute; /* 设置绝对定位 */
