@@ -33,9 +33,10 @@ export default {
             this.messages.push({ side: 'left', content: reply, image });
             this.input = '';
         },
+
         async chatbotReply(message) {
             try {
-                const requestPromise = axios.post('http://localhost:16161/messages', {
+                const requestPromise = axios.post('http://54.206.93.57:16161/messages', {
                     message
                 });
 
