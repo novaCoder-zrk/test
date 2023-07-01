@@ -34,12 +34,8 @@ let input = ref('');
 let messages = ref([]);
 let timerId;
 let delay = 60000;
-<<<<<<< HEAD
 // http://54.206.93.57:16161
 let socket = io.connect('http://127.0.0.1:16161');
-=======
-let socket = io.connect('http://54.206.93.57:16161');
->>>>>>> 336f4983bf57b61bec4394c47e8b1e5b74a0ca96
 let lastQuestion;
 socket.on('connect', function() {
     console.log("connected！")
