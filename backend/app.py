@@ -82,35 +82,37 @@ class RegisterApi(MethodView):
         invitecode = request.json.get('invitecode')
         account = request.json.get('account')
         password = request.json.get('password')
-        email = request.json.get('email')
+        user_email = request.json.get('email')
         verify_code = request.json.get('verify_code')
 
         data = pd.read_excel('account.xlsx')
         match = data[data['invitecode'] == invitecode]
-
+        match_account = data[data['account'] == account]
         wl_df = pd.read_excel('register_waiting_list.xlsx')
         mask_wl = wl_df['account'] == account
-        if mask_wl.empty:
-            response = {'message': 'wrong verify code'}
-            return response
-
-        if not check_verify_code_register(account, verify_code):
-            response = {'message': 'wrong verify code'}
-            return response
-
-
-        if match.empty:
-            response = {'message': 'code does not exist'}
+        # 账户已经存在
+        if not match_account.empty:
+            return {'message': 'account has already exist'}
+        elif mask_wl.empty:
+            # 账户不在waiting list中
+            return {'message': 'wrong verify code'}
+        elif match.empty:
+            # 邀请码不存在
+            return {'message': 'invitation code does not exist'}
         else:
             row = match.iloc[0]
             if pd.isnull(row['account']) and pd.isnull(row['password']) and pd.isnull(row['email']):
-                data.loc[data['invitecode'] == invitecode, ['account', 'password', 'email']] = [account, password, email]
-                data.to_excel('account.xlsx', index=False)
-                response = {'message': 'Registration successful'}
+                # 邀请码没有被使用
+                if check_verify_code_register(account, verify_code):
+                    # 检查验证码，并使它过期
+                    data.loc[data['invitecode'] == invitecode, ['account', 'password', 'email']] = [account, password, user_email]
+                    data.to_excel('account.xlsx', index=False)
+                else:
+                    return {'message': 'wrong verify code'}
             else:
-                response = {'message': 'code has been used'}
-
-        return response
+                return {'message': 'invitation code has been used'}
+        # 验证码
+        return {'message': 'Registration successful'}
 
 
 class SendVerifyCodeApi(MethodView):

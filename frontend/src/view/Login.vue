@@ -30,6 +30,7 @@ let password = ref("");
 let errorMessage = ref("");
 
 function handleLogin() {
+    errorMessage.value = "";
     // 发送登录请求
     axios.post(myUrl+'/login', { account: username.value, password: password.value })
         .then(response => {

@@ -50,6 +50,8 @@ def check_verify_code_register(username, verify_code):
     df = pd.read_excel('register_waiting_list.xlsx')
     mask = df["account"] == username
     user_data = df.loc[mask]
+    if user_data.empty:
+        return False
     last_verify_time = user_data['verify_time'].values[0]
     last_verify_time = datetime.datetime.utcfromtimestamp(last_verify_time.astype('O') / 1e9)
 
@@ -80,6 +82,8 @@ def check_verify_code(username, verify_code):
     df = pd.read_excel('account.xlsx')
     mask = df["account"] == username
     user_data = df.loc[mask]
+    if user_data.empty:
+        return False
     last_verify_time = user_data['verify_time'].values[0]
     last_verify_time = datetime.datetime.utcfromtimestamp(last_verify_time.astype('O') / 1e9)
 

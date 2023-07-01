@@ -102,6 +102,9 @@ function handleSend(){
 }
 
 function handleRegister() {
+    errorMessage.value = "";
+    registrationSuccess.value = false;
+
     axios.post(myUrl+'/register', {
         invitecode: invitecode.value,
         account: username.value,
@@ -113,6 +116,8 @@ function handleRegister() {
             const { message } = response.data;
             if (message === 'Registration successful') {
                 registrationSuccess.value = true;
+                alert('Registration successful!');
+                router.push('/login');
             } else {
                 errorMessage.value = message;
             }
