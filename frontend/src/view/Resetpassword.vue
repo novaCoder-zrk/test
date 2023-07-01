@@ -111,7 +111,8 @@ function handleReset(){
             .then(response => {
                 const message = response.data.message;
                 if (message === 'success'){
-                    alert("Reset password successfully!")
+                    alert("Reset password successfully!");
+                    router.push('/login');
                     console.log("reset success")
                 }
                 else{
