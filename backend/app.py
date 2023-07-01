@@ -16,8 +16,8 @@ app.config["JWT_SECRET_KEY"] = "your-secret-key"
 jwt = JWTManager(app)
 
 socketio = SocketIO(app, cors_allowed_origins="*")
-# chatbot = ChatbotBackend()
-chatbot = None
+chatbot = ChatbotBackend()
+
 @app.route('/')
 def hello_world():
     return 'Welcome!'
