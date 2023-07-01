@@ -29,8 +29,12 @@ import { ref } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 
+import { getCurrentInstance } from 'vue'
+const { appContext } = getCurrentInstance()
+const { globalProperties } = appContext.config
+const myUrl = globalProperties.$globalVar
+
 const router = useRouter()
-const myUrl = "http://localhost:16161";
 
 let invitecode = ref("");
 let username = ref("");

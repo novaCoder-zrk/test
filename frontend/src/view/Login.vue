@@ -20,11 +20,16 @@
 import {reactive, ref} from 'vue'
 import axios from 'axios'
 import {useRouter} from 'vue-router'
+
 const router = useRouter()
 
-const myUrl = "http://localhost:16161";
+//const myUrl = "http://localhost:16161";
 // const myUrl = "http://54.206.93.57:16161";
-
+import { getCurrentInstance } from 'vue'
+const { appContext } = getCurrentInstance()
+const { globalProperties } = appContext.config
+const myUrl = globalProperties.$globalVar
+console.log("my url "+myUrl)
 let username = ref("");
 let password = ref("");
 let errorMessage = ref("");

@@ -29,6 +29,7 @@ import {useRouter} from 'vue-router'
 const router = useRouter()
 import axios from 'axios'
 
+
 let username = ref("");
 let password1 = ref("");
 let password2 = ref("");
@@ -40,8 +41,12 @@ let sendAble = true;
 let sendButton = ref("Send Email");
 let timerId;
 let countDown = 0;
-const myUrl = "http://localhost:16161";
 
+
+import { getCurrentInstance } from 'vue'
+const { appContext } = getCurrentInstance()
+const { globalProperties } = appContext.config
+const myUrl = globalProperties.$globalVar
 
 function handleBackToLogin() {
     router.push('/login');
