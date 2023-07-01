@@ -40,7 +40,8 @@ let sendAble = true;
 let sendButton = ref("Send Email");
 let timerId;
 let countDown = 0;
-const myUrl = "http://localhost:16161";
+// const myUrl = "http://localhost:16161";
+const myUrl = "http://54.206.93.57:16161";
 
 
 function handleBackToLogin() {
