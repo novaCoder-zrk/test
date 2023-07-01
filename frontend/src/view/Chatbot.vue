@@ -32,7 +32,8 @@ let botAvatar =  ref('/png/bot.png');
 let input = ref('');
 let messages = ref([]);
 let timerId;
-let delay = 30000;
+let delay = 60000;
+// http://54.206.93.57:16161
 let socket = io.connect('http://127.0.0.1:16161');
 let lastQuestion;
 socket.on('connect', function() {

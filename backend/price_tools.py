@@ -219,8 +219,7 @@ def price_plot_des(query):
         fig_name = get_period_price(query)
         return fig_name
     except:
-        return "We cannot understand your query for now. If you are querying the prices of crypto, " \
-               "please try to specific the date in the format as YYYY-mm-DD, like '2023-05-30'."
+        return "We cannot understand your query for now. Kindly note that our support is limited to querying cryptocurrency prices, and we do not provide stock price information. Furthermore, when specifying a date, please ensure it is in the format YYYY-mm-DD, such as '2023-05-30'."
 
 
 def show_day_price(query):
@@ -230,4 +229,4 @@ def show_day_price(query):
         news_summary = news_summary.replace("#", "")
         return news_summary + output
     except:
-        return "We cannot understand your query for now. You may have entered an unsupported or more than one crypto."
+        return "We cannot understand your query for now."

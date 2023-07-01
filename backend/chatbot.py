@@ -1,5 +1,6 @@
 import os
 import time
+from langchain.output_parsers import RetryWithErrorOutputParser
 from loguru import logger
 import langchain
 import requests
@@ -66,29 +67,44 @@ class ChatbotBackend:
         logfile = f"log/{time.strftime('%Y-%m-%d', time.localtime(int(time.time())))}.log"
         logger.add(logfile, colorize=True, enqueue=True)
         handler = LogCallbackHandler(logfile)
-        self.llm = ChatOpenAI(model_name="gpt-3.5-turbo-0613", temperature=0.3, openai_api_key=self.api_key)
-        self.memory = seed_memory if seed_memory is not None else ConversationBufferWindowMemory(k=5,
-                                                                                                 memory_key="chat_history",
-                                                                                                 return_messages=True)
+        self.llm = ChatOpenAI(model_name="gpt-3.5-turbo-16k", temperature=0.5, openai_api_key=self.api_key)
+        self.memory = seed_memory if seed_memory is not None else ConversationBufferWindowMemory(
+            memory_key="chat_history",
+            return_messages=True)
         search = MultiGoogleSearchTool()
         tools = [
             Tool(
                 name="Search",
                 func=search.run,
+                # description="useful for questions that ask the news about a specific event with online search. "
+                #             "The search engine support advanced search operators including: \n"
+                #             "1. '\"\"' instruct to search for the exact phrase, for example, \"Bitcoin News\" denotes the results must exactly contain the phrase \"Bitcoin News\"\n"
+                #             "2. 'site:' can be added into the query to limit the results from a specific website, you can use 'site: coindesk.com', 'site: cryptonews.com' or 'site: cointelegraph.com'\n"
+                #             "3. '*' can be used as a wildcard to replace unknown words in a search query, for example, searching for  'artificial * research' will return results related to 'artificial neural network research' or 'artificial intelligence ethics research' etc.\n"
+                #             "You are free to use these advanced search operators or not to rewrite and expand the original query "
+                #             "to a comma separated list of optimized and decomposed queries "
+                #             "that can better, accurately and comprehensively retrieve the desired results. "
+                #             "Here are example responses that are properly optimized and rewrote with advanced search operators: "
+                #             "Original query: Can you tell me about the next upgrade for Ethereum? When and what will happen?\n"
+                #             "Optimized query: `\"Ethereum upgrade roadmap\",next upgrade date of Ethereum,Ethereum upgrade details site: coindesk.com`\n\n"
+                #             "Original query: Recent news related to BTC and ETH\n"
+                #             "Optimized query: `\"BTC OR ETH\",BTC site: coindesk.com,BTC site: cointelegraph.com,ETH site: coindesk.com,ETH site: cointelegraph.com`\n\n"
+                #             "Now, please give the optimized query given user's input."
                 description="useful for questions that ask the news about a specific event with online search. "
-                            "The search engine support advanced search operators including: \n"
-                            "1. '\"\"' instruct to search for the exact phrase, for example, \"Bitcoin News\" denotes the results must exactly contain the phrase \"Bitcoin News\"\n"
-                            "2. 'site:' can be added into the query to limit the results from a specific website, you can use 'site: coindesk.com', 'site: cryptonews.com' or 'site: cointelegraph.com'\n"
-                            "3. '*' can be used as a wildcard to replace unknown words in a search query, for example, searching for  'artificial * research' will return results related to 'artificial neural network research' or 'artificial intelligence ethics research' etc.\n"
-                            "You are free to use these advanced search operators or not to rewrite and expand the original query "
+                            "You need to rewrite and expand the original query "
                             "to a comma separated list of optimized and decomposed queries "
                             "that can better, accurately and comprehensively retrieve the desired results. "
-                            "For example, `\"Ethereum upgrade roadmap\",next upgrade date of Ethereum,Ethereum upgrade details site: coindesk.com` would be the optimized queries for the original query 'Can you tell me about the next upgrade for Ethereum? When and what will happen?'.",
+                            "Here are example responses that are properly optimized and rewrote: "
+                            "Original query: Can you tell me about the next upgrade for Ethereum? When and what will happen?\n"
+                            "Optimized query: `Ethereum upgrade roadmap,next upgrade date of Ethereum,Ethereum upgrade details`\n\n"
+                            "Original query: When will CPI data be announced? What is the official Web site for the CPI data?\n"
+                            "Optimized query: `CPI announce time,CPI official website`\n\n"
+                            "Now, please give the optimized query given user's input."
             ),
             Tool(
                 name="Cryptocurrency Price",
                 func=price_plot_des,
-                description="useful for questions that query the price of cryptocurrency during a period. "
+                description="useful for questions that query the price of cryptocurrency during a period, NOT for stock querying. "
                             "This tool's input is the original query, do NOT change it."
                             "Use this more than the normal search if the question "
                             "is about querying or displaying cryptocurrency price during a period, "
@@ -113,27 +129,38 @@ class ChatbotBackend:
 
         self.search_chain = initialize_agent(tools, self.llm, agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
                                              verbose=True, memory=self.memory, max_iterations=2,
-                                             early_stopping_method="generate", callbacks=[handler],
+                                             handle_parsing_errors=True, callbacks=[handler],
                                              agent_kwargs={"system_message": SYSTEM_PREFIX})
 
     def _get_datetime(self):
         return time.strftime('%b %d %Y', time.localtime(int(time.time())))
 
+    def _get_suffix(self, inp):
+        if len(inp) > 50:
+            return "Please answer the query as comprehensively as possible."
+        else:
+            return ""
+
     def generate_response(self, user_input):
         emit('status', {'status': 'LLM'})
         prompt = PromptTemplate(
-            template="Today is {date}. {query}",
+            template="Today is {date}. {query} {suffix}",
             input_variables=["query"],
-            partial_variables={"date": self._get_datetime}
+            partial_variables={"date": self._get_datetime, "suffix": self._get_suffix(user_input)}
         )
         user_input = prompt.format(query=user_input)
         try:
             with get_openai_callback() as cb:
-                response = self.search_chain.run(user_input).strip()
+                try:
+                    response = self.search_chain.run(user_input)
+                except ValueError as e:
+                    response = str(e)
+                    if not response.startswith("Could not parse LLM output: "):
+                        raise e
+                    response = response.replace("Could not parse LLM output: ", "")
                 print(f"\n{'#' * 20}\nTotal Tokens: {cb.total_tokens}")
                 print(f"Prompt Tokens: {cb.prompt_tokens}")
                 print(f"Completion Tokens: {cb.completion_tokens}")
-                print(f"Total Cost (USD): ${cb.total_cost}\n{'#' * 20}\n")
         except (MaxRetryError, SSLError):
             response = "Network error, please retry later."
         return response
@@ -148,5 +175,8 @@ test_cases = [
     "Did the NFT exchange platform Opensea issue any cryptocurrency?",
     "What is the next Bitcoin halving date? What will happen after the halving?",
     "Can you tell me about the next upgrade for Ethereum? When and what will happen?",
-    "What is the next cliff unlock date for the cryptocurrency ARB?"
+    "What is the next cliff unlock date for the cryptocurrency ARB?",
+    "Why did Nvidia's stock price almost double in the first half of 2023?",
+    "How did the Coinbase stock perform in the past few days? Any reason behind that?",
+    "I want to build a cryptocurrency portfolio. You will send a series of recommendations based on my growth goals and criteria. I want the portfolio to contain 50% low to medium risk coins. This 50% will be within the top 75 in current cryptocurrency market cap, must have an all time high that is close to 10x of the current market price, and be an established and trusted project. Next, I'd like the next 30% of the portfolio to contain medium-cap coins. These should be less than 1 billion current market cap, but greater than 100 million. I want these to achieve a realistic 20-30x in the next bull market (ie: grow from 100m to 2 billion). These should be trusted projects that are reasonably well established, but have more room to grow than some of the larger projects. Finally, I want to allocate the remaining 20% of the portfolio into speculative, low market cap projects. These should NOT be shitcoins, but they should be small with potential to 50x or even 100x in the next bull market. These must have real world utility and the potential to have an impact long term, NOT be a random pump and dump memecoin. Within each of these sectors, I want to dollar cost average into 5-10 projects at most every week. Thus, please send in detail which projects are the best fit for each of these sectors, and WHY they should be included in my portfolio. It's very important that this portfolio achieves 15x or more total growth by the end of the next bull market cycle."
 ]
