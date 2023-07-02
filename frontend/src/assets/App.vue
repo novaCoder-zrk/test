@@ -18,6 +18,11 @@ import axios from 'axios';
 import MarkdownIt from 'markdown-it'
 const md = new MarkdownIt()
 
+import { getCurrentInstance } from 'vue'
+const { appContext } = getCurrentInstance()
+const { globalProperties } = appContext.config
+const myUrl = globalProperties.$globalVar
+
 export default {
     data() {
         return {
@@ -35,7 +40,7 @@ export default {
         },
         async chatbotReply(message) {
             try {
-                const requestPromise = axios.post('http://localhost:16161/messages', {
+                const requestPromise = axios.post(myUrl+'/messages', {
                     message
                 });
 
