@@ -26,6 +26,8 @@ import MarkdownIt from 'markdown-it';
 const md = new MarkdownIt();
 import io from 'socket.io-client';
 import {ref} from "vue";
+
+
 let loaderTip = ref("...");
 let isLoading = ref(false);
 let userAvatar = ref('/png/user.png');
@@ -34,8 +36,13 @@ let input = ref('');
 let messages = ref([]);
 let timerId;
 let delay = 60000;
-// http://54.206.93.57:16161
-let socket = io.connect('http://127.0.0.1:16161');
+
+import { getCurrentInstance } from 'vue'
+const { appContext } = getCurrentInstance()
+const { globalProperties } = appContext.config
+const myUrl = globalProperties.$globalVar
+
+let socket = io.connect(myUrl);
 let lastQuestion;
 socket.on('connect', function() {
     console.log("connected！")

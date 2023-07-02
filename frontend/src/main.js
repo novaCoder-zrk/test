@@ -73,10 +73,11 @@ async function checkIfUserIsAuthenticated() {
     }
 }
 
-// const myUrl = "http://localhost:16161";
+//const myUrl = "http://localhost:16161";
 const myUrl = "http://54.206.93.57:16161";
 
 const app = createApp(App)
+app.config.globalProperties.$globalVar = myUrl;
 app.use(ElementPlus)
 app.use(router)
 app.mount('#app')
