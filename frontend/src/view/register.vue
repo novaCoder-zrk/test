@@ -13,12 +13,13 @@
             <input  class="input" type="text" placeholder="Enter verify code" id="email" v-model="verifyCode"/>
             <label class="label">Password</label>
             <input class="input" type="password" placeholder="Enter your password" id="password" v-model="password"/>
-            <input class="input" type="password" placeholder="Repeat your password" id="password" v-model="password"/>
+            <label class="label">Repeat Password</label>
+            <input class="input" type="password" placeholder="Repeat your password" id="repeatPassword" v-model="repeatPassword"/>
+            <p class="error-message" v-if="passwordMismatch">{{ passwordMismatch }}</p>
             <label class="label">Invite Code</label>
             <input class="input" type="text" placeholder="Enter your invite code" id="invitecode" v-model="invitecode" />
         </div>
         <button class="login-button" @click="handleRegister">Sign Up</button>
-<!--        <button class="login-button" @click="handleBackToLogin">Back to Login</button>-->
         <p class="success-message" v-if="registrationSuccess">Succeed!</p>
         <p class="error-message" v-if="errorMessage">{{ errorMessage }}</p>
     </div>
@@ -39,14 +40,17 @@ const router = useRouter()
 let invitecode = ref("");
 let username = ref("");
 let password = ref("");
+let repeatPassword = ref("");
 let email = ref("");
 let errorMessage = ref("");
+let passwordMismatch = ref("");
 let registrationSuccess = ref(false);
 let sendButton = ref("Send Email")
 let verifyCode = ref("");
 let timerId;
 let countDown = 0;
 let sendAble = true;
+
 
 
 function myFunction() {
@@ -105,7 +109,18 @@ function handleSend(){
 
 }
 
+function checkPasswordMatch() {
+    if (password.value !== repeatPassword.value) {
+        passwordMismatch.value = "Passwords do not match!";
+    } else {
+        passwordMismatch.value = "";
+    }
+}
+
 function handleRegister() {
+    checkPasswordMatch();
+    if (passwordMismatch.value) return;
+
     errorMessage.value = "";
     registrationSuccess.value = false;
 
