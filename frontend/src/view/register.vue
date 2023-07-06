@@ -176,6 +176,7 @@ function handleBackToLogin() {
     align-items: center;
     justify-content: center;
     width: 400px;
+    max-width: 500px;
     height: 625px;
     background-color: #fff;
     border-radius: 8px;
@@ -249,4 +250,38 @@ function handleBackToLogin() {
     margin-bottom: 1rem;
 }
 
+@media (max-width: 768px) {
+    .login-container {
+        padding: 1rem;
+    }
+
+    .register-form {
+        width: 100%;
+        padding: 1rem;
+        box-sizing: border-box;
+        max-width: 500px;
+    }
+
+    .login-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 500px) {
+    .title {
+        font-size: 1.5rem;
+    }
+
+    .label {
+        font-size: 1rem;
+    }
+
+    .input, .email-input {
+        font-size: 0.9rem;
+    }
+
+    .login-button {
+        font-size: 1rem;
+    }
+}
 </style>

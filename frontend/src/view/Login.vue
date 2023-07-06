@@ -58,7 +58,6 @@ function handleLogin() {
 </script>
 
 <style>
-/* 添加一个错误消息的样式 */
 .error {
     color: red;
     margin-top: 1rem;
@@ -85,7 +84,8 @@ function handleLogin() {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 400px;
+    width: 80vw;
+    max-width: 400px;
     height: 400px;
     background-color: #fff;
     border-radius: 8px;
@@ -110,7 +110,8 @@ function handleLogin() {
 }
 
 .login-button {
-    width: 400px;
+    width: 80vw;
+    max-width: 400px;
     padding: 0.5rem;
     margin-top: 1rem;
     border: none;
@@ -125,5 +126,24 @@ function handleLogin() {
 
 .login-button:hover {
     background-color: #1976d2;
+}
+
+@media (max-width: 768px) {
+    .title {
+        font-size: 1.5rem;
+    }
+
+    .login-form {
+        padding: 1rem;
+    }
+
+    .label {
+        font-size: 1rem;
+        margin-top: 1rem;
+    }
+
+    .login-button {
+        font-size: 1rem;
+    }
 }
 </style>

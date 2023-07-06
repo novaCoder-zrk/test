@@ -1,5 +1,8 @@
 <template>
     <div class="container">
+        <div class="back-icon-container">
+            <img class="icon" @click="handleBack" src="../assets/back.svg" alt="go back" />
+        </div>
         <div class="chat">
             <div v-for="(message, index) in messages" :key="index" class="message" :class="message.side">
                 <img class="avatar" :src="message.side === 'right' ? userAvatar : botAvatar" alt="Avatar" />
@@ -23,16 +26,9 @@
 import {onMounted, onUpdated} from 'vue';
 import axios from 'axios';
 import MarkdownIt from 'markdown-it';
-const md = new MarkdownIt();
-
-md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
-    tokens[idx].attrPush(['target', '_blank']);
-    return self.renderToken(tokens, idx, options);
-};
-
 import io from 'socket.io-client';
 import {ref} from "vue";
-
+import { useRouter } from 'vue-router'
 
 let loaderTip = ref("...");
 let isLoading = ref(false);
@@ -47,6 +43,12 @@ import { getCurrentInstance } from 'vue'
 const { appContext } = getCurrentInstance()
 const { globalProperties } = appContext.config
 const myUrl = globalProperties.$globalVar
+const router = useRouter()
+const md = new MarkdownIt();
+md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+    tokens[idx].attrPush(['target', '_blank']);
+    return self.renderToken(tokens, idx, options);
+};
 
 let socket = io.connect(myUrl);
 let lastQuestion;
@@ -81,6 +83,10 @@ socket.on('disconnect', function() {
 
     console.log('已断开与服务器的连接');
 });
+
+function handleBack() {
+    router.push('/login');
+}
 
 function sendMessage() {
     const msg = input.value;
@@ -261,6 +267,19 @@ html, body {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.back-icon-container {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1;
+}
+
+.icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    cursor: pointer;
 }
 
 </style>
