@@ -45,6 +45,7 @@ function handleLogin() {
                 errorMessage.value = "Login failed, please check your username and password.";
             } else {
                 localStorage.setItem('token', token);
+                localStorage.setItem('inviteCode', invitecode);
                 router.push(`/chatbot/${invitecode}`);
             }
         })

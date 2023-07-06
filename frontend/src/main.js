@@ -29,7 +29,11 @@ const routes = [
         path: '/chatbot/:username',
         name: 'Chatbot',
         component: Chatbot,
-        meta: { requiresAuth: true } // 添加 requiresAuth 元数据
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/:pathMatch(.*)*',
+        redirect: '/login',
     },
     {
         path: '/',
@@ -45,13 +49,21 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
     const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
     const isAuthenticated = await checkIfUserIsAuthenticated();
+    const validInviteCode = checkInviteCode(to.params.username);
 
     if (requiresAuth && !isAuthenticated) {
+        next('/login');
+    } else if (requiresAuth && !validInviteCode) {
         next('/login');
     } else {
         next();
     }
 });
+
+function checkInviteCode(inviteCode) {
+    const storedInviteCode = localStorage.getItem('inviteCode');
+    return inviteCode === storedInviteCode;
+}
 
 async function checkIfUserIsAuthenticated() {
     const token = localStorage.getItem('token');
@@ -73,8 +85,8 @@ async function checkIfUserIsAuthenticated() {
     }
 }
 
-// const myUrl = "http://localhost:16161";
-const myUrl = "http://54.206.93.57:16161";
+const myUrl = "http://localhost:16161";
+// const myUrl = "http://54.206.93.57:16161";
 
 const app = createApp(App)
 app.config.globalProperties.$globalVar = myUrl;
