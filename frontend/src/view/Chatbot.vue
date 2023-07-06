@@ -24,6 +24,12 @@ import {onMounted, onUpdated} from 'vue';
 import axios from 'axios';
 import MarkdownIt from 'markdown-it';
 const md = new MarkdownIt();
+
+md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+    tokens[idx].attrPush(['target', '_blank']);
+    return self.renderToken(tokens, idx, options);
+};
+
 import io from 'socket.io-client';
 import {ref} from "vue";
 
@@ -75,9 +81,6 @@ socket.on('disconnect', function() {
 
     console.log('已断开与服务器的连接');
 });
-
-
-
 
 function sendMessage() {
     const msg = input.value;
