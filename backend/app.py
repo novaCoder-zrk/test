@@ -88,17 +88,20 @@ class RegisterApi(MethodView):
         data = pd.read_excel('account.xlsx')
         match = data[data['invitecode'] == invitecode]
         match_account = data[data['account'] == account]
+        match_email = data[data['email'] == user_email]
         wl_df = pd.read_excel('register_waiting_list.xlsx')
         mask_wl = wl_df['account'] == account
         # 账户已经存在
         if not match_account.empty:
-            return {'message': 'account has already exist'}
+            return {'message': 'account has already exist', 'email_msg': ''}
+        elif not match_email.empty:
+            return {'message': 'email has been used', 'email_msg': ''}
         elif mask_wl.empty:
             # 账户不在waiting list中
-            return {'message': 'wrong verify code'}
+            return {'message':'fail', 'email_msg': 'wrong verify code'}
         elif match.empty:
             # 邀请码不存在
-            return {'message': 'invitation code does not exist'}
+            return {'message': 'invitation code does not exist', 'email_msg': ''}
         else:
             row = match.iloc[0]
             if pd.isnull(row['account']) and pd.isnull(row['password']) and pd.isnull(row['email']):
@@ -108,33 +111,63 @@ class RegisterApi(MethodView):
                     data.loc[data['invitecode'] == invitecode, ['account', 'password', 'email']] = [account, password, user_email]
                     data.to_excel('account.xlsx', index=False)
                 else:
-                    return {'message': 'wrong verify code'}
+                    return {'message': 'fail', 'email_msg': 'wrong verify code'}
             else:
-                return {'message': 'invitation code has been used'}
+                return {'message': 'invitation code has been used', 'email_msg': ''}
         # 验证码
-        return {'message': 'Registration successful'}
+        return {'message': 'Registration successful', 'email_msg': ''}
 
 
+def mask_email_address(email):
+    # 获取邮箱中 @ 符号的位置
+    at_index = email.find('@')
+
+    # 判断 @ 符号前的字符数是否满足条件
+    if at_index >= 4:
+        # 获取 @ 符号前的最后 4 个字符
+        last_4_chars = email[at_index - 4:at_index]
+        # 将最后 4 个字符替换为 *
+        masked_email = email.replace(last_4_chars, '*' * 4, 1)
+    else:
+        # 只保留最高位字符，其余替换为 *
+        masked_email = email[0].replace(email[0], '*') + email[1:at_index]
+ # 输出：exa****@example.com
+    return masked_email
+
+
+# For reset password
 class SendVerifyCodeApi(MethodView):
     def post(self):
         try:
             account = request.json.get('account')
             df = pd.read_excel('account.xlsx')
-            mask = df["account"] == account
-            user_data = df.loc[mask]
+            mask_account = df["account"] == account
+            mask_email = df['email'] == account
+            user_data_account = df.loc[mask_account]
+            user_data_email = df.loc[mask_email]
 
-            if user_data.empty or mask.empty:
+            if user_data_account.empty and user_data_email.empty:
                 # 没有对应的账户
                 response = {'message': 'fail'}
+            elif not user_data_account.empty:
+                my_account = user_data_account.loc[:, 'account'].values[0]
+                my_email = user_data_account.loc[:, 'email'].values[0]
+                send_verify_code(my_account)
+                my_email = mask_email_address(str(my_email))
+                response = {'message': 'success', 'email': my_email}
             else:
-                send_verify_code(account)
-                response = {'message': 'success'}
+                my_account = user_data_email.loc[:, 'account'].values[0]
+                my_email = user_data_email.loc[:, 'email'].values[0]
+                send_verify_code(my_account)
+                response = {'message': 'success', 'email': ""}
+
         except Exception as e:
             print('Error sending verify code email:', e)
             response = {'message': 'fail'}
         return response
 
 
+# for register
 class SendVerifyCodeByEmailApi(MethodView):
     def post(self):
         try:
@@ -142,24 +175,35 @@ class SendVerifyCodeByEmailApi(MethodView):
             print(account)
             email = request.json.get('email')
             print(email)
+            # 判断 account 和 email 是否都没有被使用
+            df_account = pd.read_excel('account.xlsx')
+            if not df_account[df_account['account'] == account].empty:
+                print("account already exists")
+                return {'message': 'fail', 'account_msg': 'account already exists', 'email_msg': ''}
+            if not df_account[df_account['email'] == email].empty:
+                print('email has been used')
+                return {'message': 'fail', 'account_msg': '', 'email_msg': 'email has been used'}
+
+            # 向register_waiting_list.xlsx 中添加项目
             df = pd.read_excel('register_waiting_list.xlsx')
             mask = df["account"] == account
             user_data = df[mask]
-            if mask.empty or user_data.empty:
+
+            if user_data.empty:
                 print("true")
-                df.loc[len(df),'account'] = account
-            print(df)
+                df.loc[len(df), 'account'] = account
             mask = df["account"] == account
             df.loc[mask, 'email'] = email
             code = generate_verify_code()
             dt = datetime.datetime.now()  # 获取当前时间
-            print(dt)
             dt_str = dt.strftime('%Y-%m-%d %H:%M:%S')
             df.loc[mask, 'verify_code'] = code
             df.loc[mask, 'verify_time'] = dt_str
-            print(df)
+
             df.to_excel('register_waiting_list.xlsx', index=False)
-            sending(email, code)
+            if not sending(email, code):
+                return {'message': 'fail', 'account_msg': '', 'email_msg': 'e-mail sending failed'}
+
             response = {'message': 'success'}
             return response
         except Exception as e:
