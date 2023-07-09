@@ -4,4 +4,5 @@ books.sqlite
 .flaskenv
 img
 log
+news
 __pycache__

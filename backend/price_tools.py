@@ -139,7 +139,7 @@ def get_day_price(question):
     st_form = answer[2]
     ed_form = datetime.strptime(answer[2], '%Y-%m-%d') + timedelta(days=1)
     ed_form = str(ed_form.strftime("%Y-%m-%d"))
-    news_summary = get_day_news(trg_crypto_acn[0], answer[2])
+    news_summary = ""  # get_day_news(trg_crypto_acn[0], answer[2])
     sym, x_axis, y_axis = GetPrice(trg_crypto[0], st_form, ed_form).getprice()
     df = pd.DataFrame({"time": x_axis, sym: y_axis})
     df = df.set_index('time', drop=True)

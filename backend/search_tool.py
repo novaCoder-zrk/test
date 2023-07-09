@@ -114,8 +114,12 @@ class GoogleSerperAPIWrapper(BaseModel):
 
         if results.get("answerBox"):
             answer_box = results.get("answerBox", {})
+            print(answer_box)
             if answer_box.get("answer"):
-                return "content: " + answer_box.get("answer") + "\nurl: " + answer_box.get("link")
+                if answer_box.get("link"):
+                    return "content: " + answer_box.get("answer") + "\nurl: " + answer_box.get("link")
+                else:
+                    return "content: " + answer_box.get("answer")
             elif answer_box.get("snippet"):
                 return "content: " + answer_box.get("snippet").replace("\n", " ") + "\nurl: " + answer_box.get("link")
             elif answer_box.get("snippetHighlighted"):

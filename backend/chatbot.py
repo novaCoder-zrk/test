@@ -6,7 +6,7 @@ import langchain
 import requests
 from dotenv import load_dotenv
 from flask_socketio import emit
-from langchain import PromptTemplate
+from langchain import PromptTemplate, OpenAI
 from langchain.agents import Tool, AgentType, ConversationalChatAgent
 from langchain.cache import SQLiteCache
 from langchain.callbacks import get_openai_callback, FileCallbackHandler
@@ -16,6 +16,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.agents import initialize_agent
 from urllib3.exceptions import MaxRetryError, SSLError
 
+from daily_news import read_news
 from log_handler import LogCallbackHandler
 from price_tools import price_plot_des, show_day_price
 from prompt import SYSTEM_PREFIX
@@ -67,7 +68,7 @@ class ChatbotBackend:
         logfile = f"log/{time.strftime('%Y-%m-%d', time.localtime(int(time.time())))}.log"
         logger.add(logfile, colorize=True, enqueue=True)
         handler = LogCallbackHandler(logfile)
-        self.llm = ChatOpenAI(model_name="gpt-3.5-turbo-16k", temperature=0.5, openai_api_key=self.api_key)
+        self.llm = ChatOpenAI(model_name="gpt-3.5-turbo-16k", temperature=0.2, openai_api_key=self.api_key)
         self.memory = seed_memory if seed_memory is not None else ConversationBufferWindowMemory(
             memory_key="chat_history",
             return_messages=True)
@@ -125,11 +126,24 @@ class ChatbotBackend:
                             "'display the BTC price on Jan. 2, 2021'.",
                 return_direct=True
             ),
+            Tool(
+                name="Daily News",
+                func=read_news,
+                description="useful for querying cryptocurrency-related news on a specific day. "
+                            "This original query should be transformed into a comma separated format of 'cryptocurrency name,date'."
+                            "For example: "
+                            "original query: 'what happened to BTC on May 23, 2020?'"
+                            "transformed query: 'BTC,20200523'"
+                            "original query: 'news related to ETH on April 19 2023?'"
+                            "transformed query: 'ETH,20230419'",
+                return_direct=True
+            )
         ]
 
         self.search_chain = initialize_agent(tools, self.llm, agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
                                              verbose=True, memory=self.memory, max_iterations=2,
                                              handle_parsing_errors=True, callbacks=[handler],
+                                             early_stopping_method="generate",
                                              agent_kwargs={"system_message": SYSTEM_PREFIX})
 
     def _get_datetime(self):
@@ -157,7 +171,11 @@ class ChatbotBackend:
                     response = str(e)
                     if not response.startswith("Could not parse LLM output: "):
                         raise e
-                    response = response.replace("Could not parse LLM output: ", "")
+                    response = response.removeprefix("Could not parse LLM output: ")
+                    head_str = '{'
+                    print('response:', response)
+                    if response.startswith(head_str):
+                        response = response[53:]
                 print(f"\n{'#' * 20}\nTotal Tokens: {cb.total_tokens}")
                 print(f"Prompt Tokens: {cb.prompt_tokens}")
                 print(f"Completion Tokens: {cb.completion_tokens}")
