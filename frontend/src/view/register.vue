@@ -5,20 +5,22 @@
             <img class="icon"  @click="handleBackToLogin"  src="../assets/back.svg"  alt="go back"/>
             <label class="label">Username</label>
             <input class="input" type="text" placeholder="Enter your username" id="username" v-model="username"/>
+            <span class="illegalText">{{accountErrorText}}</span>
             <label class="label">Email</label>
             <div class="email-form">
                 <input class="email-input" type="text" placeholder="Enter your email" id="email" v-model="email"/>
                 <button class="send-email-button" @click="handleSend" id="send_email">{{sendButton}}</button>
             </div>
             <input  class="input" type="text" placeholder="Enter verify code" id="email" v-model="verifyCode"/>
+            <span class="illegalText">{{emailErrorText}}</span>
             <label class="label">Password</label>
             <input class="input" type="password" placeholder="Enter your password" id="password" v-model="password"/>
-            <input class="input" type="password" placeholder="Repeat your password" id="password" v-model="password"/>
+            <input class="input" type="password" placeholder="Repeat your password" id="repeatPassword" v-model="repeatPassword"/>
+            <span class="illegalText">{{ passwordMismatch }}</span>
             <label class="label">Invite Code</label>
             <input class="input" type="text" placeholder="Enter your invite code" id="invitecode" v-model="invitecode" />
         </div>
         <button class="login-button" @click="handleRegister">Sign Up</button>
-<!--        <button class="login-button" @click="handleBackToLogin">Back to Login</button>-->
         <p class="success-message" v-if="registrationSuccess">Succeed!</p>
         <p class="error-message" v-if="errorMessage">{{ errorMessage }}</p>
     </div>
@@ -39,15 +41,18 @@ const router = useRouter()
 let invitecode = ref("");
 let username = ref("");
 let password = ref("");
+let repeatPassword = ref("");
 let email = ref("");
 let errorMessage = ref("");
+let passwordMismatch = ref("");
 let registrationSuccess = ref(false);
 let sendButton = ref("Send Email")
 let verifyCode = ref("");
 let timerId;
 let countDown = 0;
 let sendAble = true;
-
+let accountErrorText = ref("");
+let emailErrorText = ref("");
 
 function myFunction() {
     console.log("定时器到期，执行函数");
@@ -68,6 +73,8 @@ function myFunction() {
 function handleSend(){
     registrationSuccess.value = false;
     errorMessage.value = "";
+    accountErrorText.value = "";
+    emailErrorText.value = "";
     if(!sendAble)
         return;
 
@@ -91,6 +98,12 @@ function handleSend(){
                     console.log("have send!")
                 }
                 else {
+                    const account_msg = response.data.account_msg;
+                    const email_msg = response.data.email_msg;
+                    if (account_msg !== "")
+                        accountErrorText.value = account_msg;
+                    if (email_msg !== "")
+                        emailErrorText.value = email_msg;
                     sendButton.value="Send Email";
                     sendAble = true;
                     send_email.style.backgroundColor = '#4f46e5';
@@ -105,9 +118,22 @@ function handleSend(){
 
 }
 
+function checkPasswordMatch() {
+    if (password.value !== repeatPassword.value) {
+        passwordMismatch.value = "Passwords do not match!";
+    } else {
+        passwordMismatch.value = "";
+    }
+}
+
 function handleRegister() {
+    checkPasswordMatch();
+    if (passwordMismatch.value) return;
+
     errorMessage.value = "";
+    emailErrorText.value = "";
     registrationSuccess.value = false;
+    passwordMismatch.value = "";
 
     axios.post(myUrl+'/register', {
         invitecode: invitecode.value,
@@ -117,12 +143,17 @@ function handleRegister() {
         verify_code: verifyCode.value,
     })
         .then(response => {
-            const { message } = response.data;
+            const message  = response.data.message;
             if (message === 'Registration successful') {
+                clearInterval(timerId);
                 registrationSuccess.value = true;
                 alert('Registration successful!');
                 router.push('/login');
             } else {
+                const email_msg = response.data.email_msg;
+                if(email_msg !== ''){
+                    emailErrorText.value = email_msg;
+                }
                 errorMessage.value = message;
             }
         })
@@ -161,6 +192,7 @@ function handleBackToLogin() {
     align-items: center;
     justify-content: center;
     width: 400px;
+    max-width: 500px;
     height: 625px;
     background-color: #fff;
     border-radius: 8px;
@@ -233,5 +265,44 @@ function handleBackToLogin() {
     cursor: pointer;
     margin-bottom: 1rem;
 }
+.illegalText {
+//position: absolute;
+    color: red;
+    font-size: 12px;
+}
 
+@media (max-width: 768px) {
+    .login-container {
+        padding: 1rem;
+    }
+
+    .register-form {
+        width: 100%;
+        padding: 1rem;
+        box-sizing: border-box;
+        max-width: 500px;
+    }
+
+    .login-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 500px) {
+    .title {
+        font-size: 1.5rem;
+    }
+
+    .label {
+        font-size: 1rem;
+    }
+
+    .input, .email-input {
+        font-size: 0.9rem;
+    }
+
+    .login-button {
+        font-size: 1rem;
+    }
+}
 </style>

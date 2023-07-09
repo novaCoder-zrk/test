@@ -4,8 +4,8 @@
         <h1 class="title">Reset Password!</h1>
         <div class="reset-form">
             <img class="icon"  @click="handleBackToLogin"  src="../assets/back.svg"  alt="go back"/>
-            <label class="label">Username</label>
-            <input  class="input" type="text" placeholder="Enter your username" id="username" v-model="username"/>
+            <label class="label">Account</label>
+            <input  class="input" type="text" placeholder="Enter your username or email" id="username" v-model="username"/>
             <span class="illegalText">{{accountErrorText}}</span>
             <label class="label">Verify Code</label>
             <div class="email-form">
@@ -84,11 +84,17 @@ function handleSend(){
             account: username.value,
         })
             .then(response => {
+
                 const message = response.data.message;
+                console.log(message)
                 if (message === 'success') {
                     console.log("have send!")
+                    const toEmail = response.data.email;
+                    if (toEmail !== "")
+                        accountErrorText.value = "The verify code has been send to "+toEmail;
                 }
                 else {
+                    send_email.style.backgroundColor = '#4f46e5';
                     sendAble = true;
                     sendButton.value="Send Email";
                     accountErrorText.value = "no account";
@@ -121,6 +127,7 @@ function handleReset(){
             .then(response => {
                 const message = response.data.message;
                 if (message === 'success'){
+                    clearInterval(timerId);
                     alert("Reset password successfully!");
                     router.push('/login');
                     console.log("reset success")
@@ -157,6 +164,7 @@ function handleReset(){
 
     //position: absolute;
     color: red;
+    font-size: 12px;
 }
 .reset-form {
     display: flex;
