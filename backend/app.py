@@ -9,6 +9,7 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from email_sender import send_verify_code, sending
 from verify_code_handler import check_verify_code, generate_verify_code, check_verify_code_register
 import datetime
+from history import save_history, load_history
 
 app = Flask(__name__)
 CORS(app)
@@ -33,6 +34,7 @@ def handle_message(message):
     print(message)
     print(message['data'])
     response = chatbot.generate_response(message['data'])
+
     fig_path = None
     if "#@@#" in response and response.endswith(".png"):
         response, fig_path = response.split("#@@#")
