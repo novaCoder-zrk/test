@@ -4,7 +4,7 @@
         <h1 class="title">Reset Password!</h1>
         <div class="reset-form">
             <img class="icon"  @click="handleBackToLogin"  src="../assets/back.svg"  alt="go back"/>
-            <label class="label">Account</label>
+            <label class="label">Username or email address</label>
             <input  class="input" type="text" placeholder="Enter your username or email" id="username" v-model="username"/>
             <span class="illegalText">{{accountErrorText}}</span>
             <label class="label">Verify Code</label>
@@ -97,7 +97,7 @@ function handleSend(){
                     send_email.style.backgroundColor = '#4f46e5';
                     sendAble = true;
                     sendButton.value="Send Email";
-                    accountErrorText.value = "no account";
+                    accountErrorText.value = "Username or email address does not exist";
                     clearInterval(timerId);
                 }
             })
@@ -115,7 +115,7 @@ function handleReset(){
     codeErrorText.value = "";
 
     if(password1.value !== password2.value) {
-        passwordErrorText.value = "pass world not same";
+        passwordErrorText.value = "password not same";
         console.log("密码不一致")
         return;
     }else{
