@@ -116,7 +116,10 @@ function chatbotReply(msg) {
         clearTimeout(timerId);
         timerId = setTimeout(myFunction, delay);
         socket.connect();
-        socket.emit('message', {"data": msg});
+        // 获取用户名
+        let userName = router.params.username
+        console.log(userName)
+        socket.emit('message', {"username": userName},{"data": msg});
     } catch (error) {
         console.error(error);
         this.sendMessage();
