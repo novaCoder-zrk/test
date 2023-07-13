@@ -9,6 +9,9 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from email_sender import send_verify_code, sending
 from verify_code_handler import check_verify_code, generate_verify_code, check_verify_code_register
 import datetime
+from history import save_history, load_history
+import pprint
+
 
 app = Flask(__name__)
 CORS(app)
@@ -33,6 +36,8 @@ def handle_message(message):
     print(message)
     print(message['data'])
     response = chatbot.generate_response(message['data'])
+    save_history(message['username'], message['data'], response)
+
     fig_path = None
     if "#@@#" in response and response.endswith(".png"):
         response, fig_path = response.split("#@@#")
@@ -228,6 +233,33 @@ class ResetPassword(MethodView):
         return {'message': 'fail'}
 
 
+class ChatHistory(MethodView):
+    def post(self):
+        username = request.json.get('username')
+        chat_history = load_history(username)
+
+        chat_data = []
+        # 解析聊天记录
+        for chat in chat_history:
+            new_data = {'question': chat['q']}
+
+            fig_path = None
+            response = chat['a']
+            if "#@@#" in response and response.endswith(".png"):
+                response, fig_path = response.split("#@@#")
+            img_base64 = None
+            if fig_path is not None:
+                with open("./img/" + fig_path, 'rb') as img_file:
+                    img_base64 = base64.b64encode(img_file.read()).decode('utf-8')
+
+            new_data['response'] = response
+            if img_base64 is not None:
+                new_data['image'] = img_base64
+            chat_data.append(new_data)
+        return {'history': chat_data}
+
+
+
 register_api = RegisterApi.as_view('register_api')
 app.add_url_rule('/register', view_func=register_api, methods=['POST'])
 
@@ -245,6 +277,9 @@ app.add_url_rule('/sendVerifyCodeByEmail', view_func=send_verify_code_by_email_a
 
 reset_password_api = ResetPassword.as_view('reset_password_api')
 app.add_url_rule('/resetPassword', view_func=reset_password_api, methods=['POST'])
+
+chat_history_api = ChatHistory.as_view('chat_history_api')
+app.add_url_rule('/chatHistory', view_func=chat_history_api, methods=['POST'])
 
 if __name__ == '__main__':
     app.run()

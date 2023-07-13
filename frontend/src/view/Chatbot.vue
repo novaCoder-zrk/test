@@ -116,7 +116,12 @@ function chatbotReply(msg) {
         clearTimeout(timerId);
         timerId = setTimeout(myFunction, delay);
         socket.connect();
-        socket.emit('message', {"data": msg});
+        // 获取用户名
+        let userName = localStorage.getItem('inviteCode')
+
+        //console.log(userName)
+        socket.emit('message', {"username": userName,"data": msg});
+        //socket.emit('message', {"data": msg});
     } catch (error) {
         console.error(error);
         this.sendMessage();
@@ -133,10 +138,33 @@ function scrollToBottom() {
 }
 
 onUpdated(() => {
-    console.log("mounted")
+    console.log("update")
     scrollToBottom();
 });
 
+onMounted(()=>{
+    console.log("mounted")
+
+    axios.post(myUrl+'/chatHistory',
+        {
+        username: localStorage.getItem('inviteCode'),
+        })
+        .then(response => {
+           console.log("get");
+           let chat_history = response.data.history;
+           for(let i = 0;i < chat_history.length;i++){
+               let chat = chat_history[i];
+               messages.value.push({ side: 'right', content: chat.question });
+               const image = chat.image ? 'data:image/png;base64,' + chat.image : null;
+               const reply = markdownToHtml(chat.response);
+               messages.value.push({ side: 'left', content: reply, image });
+           }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+
+        });
+})
 
 </script>
 
