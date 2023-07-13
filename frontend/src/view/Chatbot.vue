@@ -159,11 +159,13 @@ onMounted(()=>{
                const reply = markdownToHtml(chat.response);
                messages.value.push({ side: 'left', content: reply, image });
            }
+            scrollToBottom();
         })
         .catch(error => {
             console.error('Error:', error);
 
         });
+
 })
 
 </script>
