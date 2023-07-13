@@ -142,7 +142,7 @@ class ChatbotBackend:
 
         self.search_chain = initialize_agent(tools, self.llm, agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
                                              verbose=True, memory=self.memory, max_iterations=4,
-                                             handle_parsing_errors=True, callbacks=[handler],
+                                             handle_parsing_errors=False, callbacks=[handler],
                                              early_stopping_method="generate",
                                              agent_kwargs={"system_message": SYSTEM_PREFIX})
 
