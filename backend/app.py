@@ -10,8 +10,6 @@ from email_sender import send_verify_code, sending
 from verify_code_handler import check_verify_code, generate_verify_code, check_verify_code_register
 import datetime
 from history import save_history, load_history
-import pprint
-
 
 app = Flask(__name__)
 CORS(app)
@@ -33,9 +31,50 @@ def handle_connect():
 
 @socketio.on("message")
 def handle_message(message):
+    data = pd.read_excel('account.xlsx')
+    match = data[data['invitecode'] == message['username']]
+
+    if not match.empty:
+        user = match.iloc[0]
+        if not pd.isnull(user['hourly_start_time']):
+            hourly_start_time = datetime.datetime.strptime(user['hourly_start_time'], '%Y-%m-%d %H:%M:%S')
+            if (datetime.datetime.now() - hourly_start_time).seconds < 3600:
+                # within an hour
+                if user['hourly_usage'] >= user['hourly_limit']:
+                    emit('response', {'status': 'success', 'question': message['data'], 'reply': "This hour's balance exceeds the limit."})
+                    return
+                else:
+                    user['hourly_usage'] += 1
+            else:
+                user['hourly_start_time'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                user['hourly_usage'] = 1
+        else:
+            user['hourly_start_time'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            user['hourly_usage'] = 1
+
+        if user['total_usage'] >= user['total_limit']:
+            emit('response', {'status': 'success', 'question': message['data'], 'reply': "The account's balance exceeds the limit."})
+            return
+        else:
+            user['total_usage'] += 1
+
+        index_to_update = data.loc[data['invitecode'] == user['invitecode']].index
+        if not index_to_update.empty:
+            index_to_update = index_to_update[0]
+
+            for column in user.keys():
+                data.at[index_to_update, column] = user[column]
+        else:
+            print(f"No row found with invitecode = {user['invitecode']}")
+
+        data.to_excel('account.xlsx', index=False)
+
     print(message)
     print(message['data'])
+
+    # response = "temp"
     response = chatbot.generate_response(message['data'])
+
     save_history(message['username'], message['data'], response)
 
     fig_path = None
