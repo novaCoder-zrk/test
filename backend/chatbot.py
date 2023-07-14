@@ -68,7 +68,7 @@ class ChatbotBackend:
         logfile = f"log/{time.strftime('%Y-%m-%d', time.localtime(int(time.time())))}.log"
         logger.add(logfile, colorize=True, enqueue=True)
         handler = LogCallbackHandler(logfile)
-        self.llm = ChatOpenAI(model_name="gpt-3.5-turbo-16k", temperature=0.2, openai_api_key=self.api_key)
+        self.llm = ChatOpenAI(model_name="gpt-3.5-turbo-16k", temperature=0.1, openai_api_key=self.api_key)
         self.memory = seed_memory if seed_memory is not None else ConversationBufferWindowMemory(
             memory_key="chat_history",
             return_messages=True)
@@ -176,6 +176,8 @@ class ChatbotBackend:
                     print('response:', response)
                     if response.startswith(head_str):
                         response = response[53:]
+                    if response[:-1] == '}':
+                        response = response[:-2]
                 print(f"\n{'#' * 20}\nTotal Tokens: {cb.total_tokens}")
                 print(f"Prompt Tokens: {cb.prompt_tokens}")
                 print(f"Completion Tokens: {cb.completion_tokens}")
