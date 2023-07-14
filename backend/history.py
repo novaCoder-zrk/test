@@ -1,7 +1,13 @@
 import json
+import os
 
 
 def save_history(user, q, a):
+    folder_path = "./history"  # 替换为你要创建的文件夹路径
+
+    if not os.path.exists(folder_path):  # 检测文件夹是否存在
+        os.makedirs(folder_path)  # 创建文件夹
+
     file_path = './history/'+user+'_history.json'
     try:
         with open(file_path, 'r') as f:
@@ -13,11 +19,9 @@ def save_history(user, q, a):
 
     except FileNotFoundError:
         chat_history = []
-        print("create new file")
     except json.decoder.JSONDecodeError:
         # 文件为空，返回空列表
         chat_history = []
-        print("empty file")
 
     new_chat = {'q': q, 'a': a}
     chat_history.append(new_chat)
@@ -29,6 +33,11 @@ def save_history(user, q, a):
 
 
 def load_history(user):
+    folder_path = "./history"  # 替换为你要创建的文件夹路径
+
+    if not os.path.exists(folder_path):  # 检测文件夹是否存在
+        os.makedirs(folder_path)  # 创建文件夹
+
     file_path = './history/' + user + '_history.json'
     try:
         with open(file_path, 'r') as f:
@@ -37,12 +46,11 @@ def load_history(user):
             chat_history = []
     except FileNotFoundError:
         chat_history = []
-        print("create new file")
     except json.decoder.JSONDecodeError:
         # 文件为空，返回空列表
         chat_history = []
-        print("empty file")
 
     return chat_history
 
 #save_history("user1", "hello", "hello")
+
