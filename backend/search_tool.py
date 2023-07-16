@@ -209,8 +209,8 @@ class MultiGoogleSearchTool:
         for q in query:
             all_ret.append(self.search_engine.run(q.strip()))
         res = "".join(all_ret) + "\n\n"
-        res += SEARCH_INSTRUCTION
+        ans = SEARCH_INSTRUCTION.format(res)
         today_date = time.strftime('%b %d %Y', time.localtime(int(time.time())))
-        res += f"\n\nBe careful about the date or live event mentioned in the above searched result, as it might be outdated. You should be aware that the correct current date is {today_date}. If the current date can assist in providing a more accurate and precise answer to the user's query, please incorporate it along with the aforementioned information. However, if the current date is not relevant or necessary for addressing the query, there is no need to mention it.\n\n"
+        ans += f"\n\nBe careful about the date or live event mentioned in the above searched result, as it might be outdated. You should be aware that the correct current date is {today_date}. If the current date can assist in providing a more accurate and precise answer to the user's query, please incorporate it along with the aforementioned information. However, if the current date is not relevant or necessary for addressing the query, there is no need to mention it.\n\n"
         emit('status', {'status': 'LLM'})
-        return res
+        return ans
