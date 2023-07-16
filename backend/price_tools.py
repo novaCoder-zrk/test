@@ -139,7 +139,6 @@ def get_day_price(question):
     st_form = answer[2]
     ed_form = datetime.strptime(answer[2], '%Y-%m-%d') + timedelta(days=1)
     ed_form = str(ed_form.strftime("%Y-%m-%d"))
-    news_summary = ""  # get_day_news(trg_crypto_acn[0], answer[2])
     sym, x_axis, y_axis = GetPrice(trg_crypto[0], st_form, ed_form).getprice()
     df = pd.DataFrame({"time": x_axis, sym: y_axis})
     df = df.set_index('time', drop=True)
@@ -150,19 +149,11 @@ def get_day_price(question):
         result = df
     if len(result) == 1:
         output = "The price of " + answer[0] + " at " + answer[1] + " on " + answer[2] + " is " + str(result[0]) + "."
-        return output, news_summary
     else:
-        result.index = pd.to_datetime(result.index.values, format='%Y-%m-%dT%H:00:00.000Z')
-        formatted_s = result.index.strftime("%H:%M:%S")
-        plt.figure(figsize=(10, 6))
-        plt.plot_date(formatted_s, result.values, linestyle='solid')
-        plt.xlabel('Date')
-        plt.ylabel('Price')
-        plt.gcf().autofmt_xdate()
-        fig_title = trg_crypto_acn[0] + "_" + answer[2]
-        plt.savefig(f"./img/{fig_title}.png")
-
-        return '#@@#' + fig_title + ".png", news_summary
+        h, l = result.max(), result.min()
+        output = "On " + answer[2] + ", the highest and lowest price of " + answer[0] + " are " + str(
+            h) + " and " + str(l) + ", respectively."
+        return output
 
 
 def get_period_price(question):
@@ -225,8 +216,7 @@ def price_plot_des(query):
 def show_day_price(query):
     try:
         emit('status', {'status': 'Crypto Price&News Search'})
-        output, news_summary = get_day_price(query)
-        news_summary = news_summary.replace("#", "")
-        return news_summary + output
+        output = get_day_price(query)
+        return output
     except:
         return "We cannot understand your query for now."
