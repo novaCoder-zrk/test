@@ -123,7 +123,7 @@ class ChatbotBackend:
                             "is about querying or displaying cryptocurrency price for a day rather than a period of time, "
                             "like 'what the BTC price on May 5, 2023', "
                             "'what is the Dogecoin price at 8:00 on Feb. 12, 2020' or "
-                            "'display the BTC price on Jan. 2, 2021'.",
+                            "'tell me the BTC price on Jan. 2, 2021'.",
                 return_direct=True
             ),
             Tool(

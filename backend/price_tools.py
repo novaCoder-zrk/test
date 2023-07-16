@@ -150,10 +150,11 @@ def get_day_price(question):
     if len(result) == 1:
         output = "The price of " + answer[0] + " at " + answer[1] + " on " + answer[2] + " is " + str(result[0]) + "."
     else:
-        h, l = result.max(), result.min()
-        output = "On " + answer[2] + ", the highest and lowest price of " + answer[0] + " are " + str(
+        prices = result[trg_crypto[0]].values
+        h, l = prices.max(), prices.min()
+        output = "On " + answer[2] + ", the highest and lowest prices of " + answer[0] + " are " + str(
             h) + " and " + str(l) + ", respectively."
-        return output
+    return output
 
 
 def get_period_price(question):
@@ -215,7 +216,7 @@ def price_plot_des(query):
 
 def show_day_price(query):
     try:
-        emit('status', {'status': 'Crypto Price&News Search'})
+        emit('status', {'status': 'Crypto Price Search'})
         output = get_day_price(query)
         return output
     except:
