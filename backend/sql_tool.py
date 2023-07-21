@@ -1,5 +1,5 @@
 import mysql.connector
-
+import datetime
 # 连接 MySQL 数据库
 db = mysql.connector.connect(
     host="54.206.93.57",
@@ -74,6 +74,24 @@ def check_password(user_name,password):
         return result[0]
     return result
 
+def get_usage_info(invite_code):
+    cursor = db.cursor()
+    sql = "SELECT  hourly_limit, total_limit, hourly_start_time, total_usage, hourly_usage FROM  account WHERE invitecode = %s"
+    val = (invite_code,)
+    cursor.execute(sql, val)
+    result = cursor.fetchone()
+    return result
+
+def update_usage_info(invite_code, hourly_start_time, total_usage, hourly_usage):
+    cursor = db.cursor()
+    sql = "UPDATE  account set hourly_start_time = %s, total_usage = %s, hourly_usage = %s  WHERE invitecode = %s"
+    val = (hourly_start_time, total_usage, hourly_usage, invite_code)
+    cursor.execute(sql, val)
+    db.commit()
+
+
 # if_has_item("account", "email", "temp@gmail.com")
 
 #select_item('account', 'invitecode', 'INV001', 'user_name')
+time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+update_usage_info('TSpk3sp', time, 1, 1)
