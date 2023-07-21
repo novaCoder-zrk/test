@@ -36,4 +36,44 @@ def insert_register(user_name, email, verify_code, verify_time):
     print(cursor.rowcount, "record inserted.")
 
 
-insert_register('user1', 'pass2', 'bbb', '2023/7/1  12:18:33')
+def has_item(my_table, col, value):
+    cursor = db.cursor()
+    sql = "SELECT  COUNT(*) FROM " + my_table + " WHERE " + col + " = %s"
+    val = (value,)
+    cursor.execute(sql, val)
+    result = cursor.fetchone()[0]
+    #result = cursor.fetchall()[0]
+    if result > 0:
+        return True
+
+
+def select_item(my_table, key_col, key_value, col):
+    cursor = db.cursor()
+    sql = "SELECT " + col + " FROM " + my_table + " WHERE " + key_col + " = %s"
+    val = (key_value,)
+    cursor.execute(sql, val)
+    #result = cursor.fetchone()[0]
+    result = cursor.fetchone()[0]
+    return result
+
+def update_item(my_table, key_col, key_value, col, value):
+    cursor = db.cursor()
+    sql = "UPDATE " + my_table + " SET " + col + " = %s " + "WHERE " + key_col + " = %s"
+    val = (value, key_value)
+    cursor.execute(sql, val)
+    db.commit()
+    print(cursor.rowcount, "record updated.")
+
+def check_password(user_name,password):
+    cursor = db.cursor()
+    sql = "SELECT  invitecode FROM  account WHERE user_name = %s and password = %s"
+    val = (user_name,password)
+    cursor.execute(sql, val)
+    result = cursor.fetchone()
+    if result is not None:
+        return result[0]
+    return result
+
+# if_has_item("account", "email", "temp@gmail.com")
+
+#select_item('account', 'invitecode', 'INV001', 'user_name')
