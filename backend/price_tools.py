@@ -1,22 +1,17 @@
 import os
 import time
-from datetime import datetime, timedelta
 import json
-
 import openai
-import pandas as pd
 import pytz
+import pandas as pd
+import matplotlib
+import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 from flask_socketio import emit
 from requests import Session
-
-import matplotlib.pyplot as plt
-import matplotlib
-
-from get_day_news import get_day_news
+from datetime import datetime, timedelta
 
 matplotlib.use('Agg')
-
 load_dotenv(verbose=True)
 
 
@@ -37,7 +32,7 @@ crypto_names, full_name, short_name = get_names()
 
 
 class GetPrice:
-    def __init__(self, coin_symbol, st, ed):  # 约定时间格式为2023-03-02 00:00
+    def __init__(self, coin_symbol, st, ed):
         self.coin_symbol = coin_symbol
         self.st = st
         self.ed = ed

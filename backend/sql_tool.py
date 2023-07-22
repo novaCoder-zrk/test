@@ -1,6 +1,7 @@
 import mysql.connector
 import datetime
-# 连接 MySQL 数据库
+
+
 db = mysql.connector.connect(
     host="54.206.93.57",
     user="remote",
@@ -8,7 +9,7 @@ db = mysql.connector.connect(
     database="mysql"
 )
 
-# 插入一条新记录
+
 def insert_invitecode(code):
     cursor = db.cursor()
     sql = "INSERT INTO account (invitecode)  VALUES  (%s)"

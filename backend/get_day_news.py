@@ -1,21 +1,11 @@
 import os
-
-import requests
-import time
-from datetime import datetime, date, timedelta
 import openai
+import requests
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 load_dotenv(verbose=True)
-# prompt = """As a news aggregator. Given a set of headlines and summaries of news articles,
-# provide a summary of the content of each article in a concise and informative manner.
-# Your summary should give me a good idea of what this news list is about without requiring
-# me to read it article by article. Please ensure that your abstract is accurate, unbiased
-# and relevant to the title and abstract of the article. Also, please try to group related
-# articles together and highlight any overarching themes or trends in the news listings.
-# Please note that your answer should not exceed 2,000 words.
-# News list: {}
-# """
+
 
 prompt = """
 Act as a news summarizer. Please summarize the following news list:
@@ -39,7 +29,6 @@ def get_bot_response(news_list):
         presence_penalty=0
     )
 
-    # 返回机器人的回复
     return response['choices'][0].text
 
 

@@ -1,15 +1,14 @@
 import os
 import time
-from langchain.output_parsers import RetryWithErrorOutputParser
 from loguru import logger
 import langchain
 import requests
 from dotenv import load_dotenv
 from flask_socketio import emit
-from langchain import PromptTemplate, OpenAI
-from langchain.agents import Tool, AgentType, ConversationalChatAgent
+from langchain import PromptTemplate
+from langchain.agents import Tool, AgentType
 from langchain.cache import SQLiteCache
-from langchain.callbacks import get_openai_callback, FileCallbackHandler
+from langchain.callbacks import get_openai_callback
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.chat_models import ChatOpenAI
@@ -77,20 +76,6 @@ class ChatbotBackend:
             Tool(
                 name="Search",
                 func=search.run,
-                # description="useful for questions that ask the news about a specific event with online search. "
-                #             "The search engine support advanced search operators including: \n"
-                #             "1. '\"\"' instruct to search for the exact phrase, for example, \"Bitcoin News\" denotes the results must exactly contain the phrase \"Bitcoin News\"\n"
-                #             "2. 'site:' can be added into the query to limit the results from a specific website, you can use 'site: coindesk.com', 'site: cryptonews.com' or 'site: cointelegraph.com'\n"
-                #             "3. '*' can be used as a wildcard to replace unknown words in a search query, for example, searching for  'artificial * research' will return results related to 'artificial neural network research' or 'artificial intelligence ethics research' etc.\n"
-                #             "You are free to use these advanced search operators or not to rewrite and expand the original query "
-                #             "to a comma separated list of optimized and decomposed queries "
-                #             "that can better, accurately and comprehensively retrieve the desired results. "
-                #             "Here are example responses that are properly optimized and rewrote with advanced search operators: "
-                #             "Original query: Can you tell me about the next upgrade for Ethereum? When and what will happen?\n"
-                #             "Optimized query: `\"Ethereum upgrade roadmap\",next upgrade date of Ethereum,Ethereum upgrade details site: coindesk.com`\n\n"
-                #             "Original query: Recent news related to BTC and ETH\n"
-                #             "Optimized query: `\"BTC OR ETH\",BTC site: coindesk.com,BTC site: cointelegraph.com,ETH site: coindesk.com,ETH site: cointelegraph.com`\n\n"
-                #             "Now, please give the optimized query given user's input."
                 description="useful for questions that ask the news about a specific event with online search. "
                             "You need to rewrite and expand the original query "
                             "to a comma separated list of optimized and decomposed queries "

@@ -4,15 +4,11 @@ import base64
 from chatbot import ChatbotBackend
 from flask_socketio import SocketIO, emit
 from flask.views import MethodView
-import pandas as pd
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from email_sender import sending
 from verify_code_handler import check_verify_code, generate_verify_code, check_verify_code_register
-import datetime
 from history import save_historyfordays, save_history, load_history
 from sql_tool import *
-import pprint
-
 
 app = Flask(__name__)
 CORS(app)
@@ -21,6 +17,7 @@ jwt = JWTManager(app)
 
 socketio = SocketIO(app, cors_allowed_origins="*")
 chatbot = ChatbotBackend()
+
 
 @app.route('/')
 def hello_world():
@@ -34,7 +31,6 @@ def handle_connect():
 
 @socketio.on("message")
 def handle_message(message):
-
     invite_code = message['username']
     if has_item('account', 'invitecode', invite_code):
         hourly_limit, total_limit, hourly_start_time, total_usage, hourly_usage = get_usage_info(invite_code)
@@ -56,7 +52,8 @@ def handle_message(message):
         # total
         if total_usage >= total_limit:
 
-            emit('response', {'status': 'success', 'question': message['data'], 'reply': "The account's balance exceeds the limit."})
+            emit('response', {'status': 'success', 'question': message['data'],
+                              'reply': "The account's balance exceeds the limit."})
             return
         else:
             total_usage += 1
@@ -68,7 +65,6 @@ def handle_message(message):
 
     print(message)
     print(message['data'])
-
 
     response = chatbot.generate_response(message['data'])
     # response = "test message."
@@ -125,57 +121,41 @@ class RegisterApi(MethodView):
         user_email = request.json.get('email')
         verify_code = request.json.get('verify_code')
         if has_item('account', 'user_name', account):
-            # 账户已经存在
             print("account already exists")
             return {'message': 'account has already exist', 'email_msg': ''}
         if has_item('account', 'email', user_email):
-            # 邮箱已经被使用
             print('email has been used')
             return {'message': 'email has been used', 'email_msg': ''}
         if not has_item('register_waiting', 'user_name', account):
-            # waiting list中没有对应的account
             return {'message': 'fail', 'email_msg': 'wrong verify code'}
         if not has_item('account', 'invitecode', invitecode):
-            # 邀请码不存在
             return {'message': 'invitation code does not exist', 'email_msg': ''}
-        if select_item('account', 'invitecode', invitecode, 'user_name') != None:
-            # 邀请码已经被使用
+        if select_item('account', 'invitecode', invitecode, 'user_name') is not None:
             return {'message': 'invitation code has been used', 'email_msg': ''}
-        # 邀请码没有被使用
-        if check_verify_code_register(account, verify_code): # 检查验证码，并使它过期
-            # 将 用户名 密码 email 写入account表中
+        if check_verify_code_register(account, verify_code):
             insert_user(invitecode, account, password, user_email)
         else:
             return {'message': 'fail', 'email_msg': 'wrong verify code'}
 
-        # 注册成功
         return {'message': 'Registration successful', 'email_msg': ''}
 
 
 def mask_email_address(email):
-    # 获取邮箱中 @ 符号的位置
     at_index = email.find('@')
 
-    # 判断 @ 符号前的字符数是否满足条件
     if at_index >= 4:
-        # 获取 @ 符号前的最后 4 个字符
         last_4_chars = email[at_index - 4:at_index]
-        # 将最后 4 个字符替换为 *
         masked_email = email.replace(last_4_chars, '*' * 4, 1)
     else:
-        # 只保留最高位字符，其余替换为 *
         masked_email = email[0].replace(email[0], '*') + email[1:at_index]
- # 输出：exa****@example.com
     return masked_email
 
 
-# For reset password
 class SendVerifyCodeApi(MethodView):
     def post(self):
         try:
             account = request.json.get('account')
             if has_item('account', 'user_name', account):
-                # 输入的用户名存在
                 code = generate_verify_code()
                 dt_now = datetime.datetime.now()
                 dt_str = dt_now.strftime('%Y-%m-%d %H:%M:%S')
@@ -217,7 +197,6 @@ class SendVerifyCodeByEmailApi(MethodView):
             print(account)
             email = request.json.get('email')
             print(email)
-            # 判断 account 和 email 是否都没有被使用
             if has_item('account', 'user_name', account):
                 print("account already exists")
                 return {'message': 'fail', 'account_msg': 'account already exists', 'email_msg': ''}
@@ -225,11 +204,9 @@ class SendVerifyCodeByEmailApi(MethodView):
                 print('email has been used')
                 return {'message': 'fail', 'account_msg': '', 'email_msg': 'email has been used'}
 
-            # 向register_waiting 中添加项目
-            code = generate_verify_code() # 获取验证码
-            dt = datetime.datetime.now()  # 获取当前时间
+            code = generate_verify_code()
+            dt = datetime.datetime.now()
             dt_str = dt.strftime('%Y-%m-%d %H:%M:%S')
-            # 写入数据库
             insert_register(account, email, code, dt_str)
 
             if not sending(email, code):
@@ -252,7 +229,7 @@ class ResetPassword(MethodView):
             user_name = account
         elif has_item('account', 'email', account):
             my_email = account
-            user_name = select_item('account','email', my_email,'user_name')
+            user_name = select_item('account', 'email', my_email, 'user_name')
         else:
             return {'message': 'fail'}
 
@@ -269,7 +246,6 @@ class ChatHistory(MethodView):
         chat_history = load_history(username)
 
         chat_data = []
-        # 解析聊天记录
         for chat in chat_history:
             new_data = {'question': chat['q']}
 
@@ -287,7 +263,6 @@ class ChatHistory(MethodView):
                 new_data['image'] = img_base64
             chat_data.append(new_data)
         return {'history': chat_data}
-
 
 
 register_api = RegisterApi.as_view('register_api')

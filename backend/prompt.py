@@ -7,8 +7,6 @@ It is able to process and understand large amounts of text, and can use this kno
 Overall, ChatCrypto is a powerful system that can help with a wide range of tasks and provide valuable insights and information on a wide range of topics. Whether you need help with a specific question or just want to have a conversation about a particular topic, ChatCrypto is here to assist."""
 
 
-
-
 # SEARCH_INSTRUCTION = """
 # --------------------
 # In the provided search results, each entry consists of a 'content' section and its corresponding 'url' link. When generating a response based on these contents, it is important to ensure that your answer is marked with citation numbers in the format of a markdown hyperlink '[number](url)'.
