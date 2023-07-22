@@ -9,7 +9,7 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from email_sender import sending
 from verify_code_handler import check_verify_code, generate_verify_code, check_verify_code_register
 import datetime
-from history import save_history, load_history
+from history import save_historyfordays, save_history, load_history
 from sql_tool import *
 import pprint
 
@@ -71,8 +71,10 @@ def handle_message(message):
 
 
     response = chatbot.generate_response(message['data'])
+    # response = "test message."
 
     save_history(message['username'], message['data'], response)
+    save_historyfordays(message['username'], message['data'], response)
 
     fig_path = None
     if "#@@#" in response and response.endswith(".png"):
