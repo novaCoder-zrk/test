@@ -9,6 +9,14 @@ from email_sender import sending
 from verify_code_handler import check_verify_code, generate_verify_code, check_verify_code_register
 from history import save_historyfordays, save_history, load_history
 from sql_tool import *
+import os
+import logging
+
+if not os.path.exists('errorlog'):
+    os.makedirs('errorlog')
+
+logging.basicConfig(filename='errorlog/error.log', level=logging.ERROR)
+
 
 app = Flask(__name__)
 CORS(app)
@@ -18,6 +26,10 @@ jwt = JWTManager(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 chatbot = ChatbotBackend()
 
+@app.errorhandler(Exception)
+def handle_error(e):
+    app.logger.error(f"An error occurred: {str(e)}")
+    return str(e), 500
 
 @app.route('/')
 def hello_world():
