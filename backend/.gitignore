@@ -7,5 +7,6 @@ log
 news
 account.xlsx
 history/*
+errorlog/*
 register_waiting_list.xlsx
 __pycache__

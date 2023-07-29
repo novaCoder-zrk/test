@@ -17,6 +17,15 @@ if not os.path.exists('errorlog'):
 
 logging.basicConfig(filename='errorlog/error.log', level=logging.ERROR)
 
+logger = logging.getLogger('chatbot_error_logger')
+logger.setLevel(logging.ERROR)
+handler = logging.FileHandler('errorlog/runerror.log')
+handler.setLevel(logging.ERROR)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+
 
 app = Flask(__name__)
 CORS(app)
@@ -24,7 +33,11 @@ app.config["JWT_SECRET_KEY"] = "your-secret-key"
 jwt = JWTManager(app)
 
 socketio = SocketIO(app, cors_allowed_origins="*")
-chatbot = ChatbotBackend()
+
+try:
+    chatbot = ChatbotBackend()
+except Exception as e:
+    logger.error("An error occurred: " + str(e))
 
 @app.errorhandler(Exception)
 def handle_error(e):
@@ -78,7 +91,10 @@ def handle_message(message):
     print(message)
     print(message['data'])
 
-    response = chatbot.generate_response(message['data'])
+    try:
+        response = chatbot.generate_response(message['data'])
+    except Exception as e:
+        logger.error("An error occurred: " + str(e))
     # response = "test message."
 
     save_history(message['username'], message['data'], response)
