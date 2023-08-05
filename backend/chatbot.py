@@ -111,18 +111,18 @@ class ChatbotBackend:
                             "'tell me the BTC price on Jan. 2, 2021'.",
                 return_direct=True
             ),
-            Tool(
-                name="Daily News",
-                func=read_news,
-                description="useful for querying cryptocurrency-related news on a specific day. "
-                            "This original query should be transformed into a comma separated format of 'cryptocurrency name,date'."
-                            "For example: "
-                            "original query: 'what happened to BTC on May 23, 2020?'"
-                            "transformed query: 'BTC,20200523'"
-                            "original query: 'news related to ETH on April 19 2023?'"
-                            "transformed query: 'ETH,20230419'",
-                return_direct=True
-            )
+            # Tool(
+            #     name="Daily News",
+            #     func=read_news,
+            #     description="useful for querying cryptocurrency-related news on a specific day. "
+            #                 "This original query should be transformed into a comma separated format of 'cryptocurrency name,date'."
+            #                 "For example: "
+            #                 "original query: 'what happened to BTC on May 23, 2020?'"
+            #                 "transformed query: 'BTC,20200523'"
+            #                 "original query: 'news related to ETH on April 19 2023?'"
+            #                 "transformed query: 'ETH,20230419'",
+            #     return_direct=True
+            # )
         ]
 
         self.search_chain = initialize_agent(tools, self.llm, agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
@@ -148,26 +148,33 @@ class ChatbotBackend:
             partial_variables={"date": self._get_datetime, "suffix": self._get_suffix(user_input)}
         )
         user_input = prompt.format(query=user_input)
-        try:
-            with get_openai_callback() as cb:
-                try:
-                    response = self.search_chain.run(user_input)
-                except ValueError as e:
-                    response = str(e)
-                    if not response.startswith("Could not parse LLM output: "):
-                        raise e
-                    response = response.removeprefix("Could not parse LLM output: ")
-                    head_str = '{'
-                    print('response:', response)
-                    if response.startswith(head_str):
-                        response = response[53:]
-                    if response[:-1] == '}':
-                        response = response[:-2]
-                print(f"\n{'#' * 20}\nTotal Tokens: {cb.total_tokens}")
-                print(f"Prompt Tokens: {cb.prompt_tokens}")
-                print(f"Completion Tokens: {cb.completion_tokens}")
-        except (MaxRetryError, SSLError):
-            response = "Network error, please retry later."
+        success = False
+        cnt = 5
+        while not success and cnt > 0:
+            print(f"{cnt} retry left..")
+            cnt -= 1
+            try:
+                with get_openai_callback() as cb:
+                    try:
+                        response = self.search_chain.run(user_input)
+                        success = True
+                    except ValueError as e:
+                        response = str(e)
+                        if not response.startswith("Could not parse LLM output: "):
+                            continue
+                        response = response.removeprefix("Could not parse LLM output: ")
+                        head_str = '{'
+                        print('response:', response)
+                        if response.startswith(head_str):
+                            response = response[53:]
+                        if response[:-1] == '}':
+                            response = response[:-2]
+                        success = True
+                    print(f"\n{'#' * 20}\nTotal Tokens: {cb.total_tokens}")
+                    print(f"Prompt Tokens: {cb.prompt_tokens}")
+                    print(f"Completion Tokens: {cb.completion_tokens}")
+            except (MaxRetryError, SSLError):
+                response = "Network error, please retry later."
         return response
 
 

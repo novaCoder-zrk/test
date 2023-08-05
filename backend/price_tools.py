@@ -146,7 +146,7 @@ def get_day_price(question):
         output = "The price of " + answer[0] + " at " + answer[1] + " on " + answer[2] + " is " + str(result[0]) + "."
     else:
         prices = result[trg_crypto[0]].values
-        h, l = prices.max(), prices.min()
+        h, l = round(prices.max(), 2), round(prices.min(), 2)
         output = "On " + answer[2] + ", the highest and lowest prices of " + answer[0] + " are " + str(
             h) + " and " + str(l) + ", respectively."
     return output
