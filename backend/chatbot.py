@@ -173,7 +173,7 @@ class ChatbotBackend:
                     print(f"\n{'#' * 20}\nTotal Tokens: {cb.total_tokens}")
                     print(f"Prompt Tokens: {cb.prompt_tokens}")
                     print(f"Completion Tokens: {cb.completion_tokens}")
-            except (MaxRetryError, SSLError):
+            except Exception as e:
                 response = "Network error, please retry later."
         return response
 
