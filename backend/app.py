@@ -8,6 +8,7 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from email_sender import sending
 from verify_code_handler import check_verify_code, generate_verify_code, check_verify_code_register
 from history import save_historyfordays, save_history, load_history
+from traceback import format_exc
 from sql_tool import *
 import os
 import logging
@@ -15,17 +16,15 @@ import logging
 if not os.path.exists('errorlog'):
     os.makedirs('errorlog')
 
-logging.basicConfig(filename='errorlog/error.log', level=logging.ERROR)
+logging.basicConfig(filename='errorlog/runlog.log', level=logging.ERROR)
 
 logger = logging.getLogger('chatbot_error_logger')
 logger.setLevel(logging.ERROR)
 handler = logging.FileHandler('errorlog/runerror.log')
 handler.setLevel(logging.ERROR)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - File: %(filename)s, line: %(lineno)d, in: %(funcName)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
-
-
 
 app = Flask(__name__)
 CORS(app)
@@ -37,11 +36,12 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 try:
     chatbot = ChatbotBackend()
 except Exception as e:
-    logger.error("An error occurred: " + str(e))
+    logger.error("An error occurred: " + str(e), exc_info=True)
 
 @app.errorhandler(Exception)
 def handle_error(e):
-    app.logger.error(f"An error occurred: {str(e)}")
+    trace = format_exc()
+    logger.error(f"An error occurred: {str(e)}\nTraceback: {trace}")
     return str(e), 500
 
 @app.route('/')
@@ -94,7 +94,8 @@ def handle_message(message):
     try:
         response = chatbot.generate_response(message['data'])
     except Exception as e:
-        logger.error("An error occurred: " + str(e))
+        logger.error("An error occurred: " + str(e), exc_info=True)
+
     # response = "test message."
 
     save_history(message['username'], message['data'], response)
