@@ -37,7 +37,7 @@ let botAvatar =  ref('/png/bot.png');
 let input = ref('');
 let messages = ref([]);
 let timerId;
-let delay = 60000;
+let delay = 100000;
 
 import { getCurrentInstance } from 'vue'
 const { appContext } = getCurrentInstance()
