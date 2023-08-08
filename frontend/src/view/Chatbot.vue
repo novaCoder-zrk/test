@@ -1,22 +1,34 @@
 <template>
-    <div class="container">
+    <div class="chatpdf">
         <div class="back-icon-container">
-            <img class="icon" @click="handleBack" src="../assets/back.svg" alt="go back" />
+            <img class="icon" @click="handleBack" src="../assets/back-white.svg" alt="go back" />
         </div>
-        <div class="chat">
-            <div v-for="(message, index) in messages" :key="index" class="message" :class="message.side">
-                <img class="avatar" :src="message.side === 'right' ? userAvatar : botAvatar" alt="Avatar" />
-                <img v-if="message.image" :src="message.image" alt="Image" />
-                <div class="content" v-html="message.content"></div>
-                <div>
-                    <div v-if=" isLoading===true && message.side === 'right' && index === messages.length - 1" class="loader"></div>
-                    <span v-if=" isLoading===true && message.side === 'right' && index === messages.length - 1" class="">{{loaderTip}}</span>
+        <div class="pannel">
+            <div class="chatbotTitle">CHATBOT</div>
+            <div class="sideList">
+                <div  v-for="(chat_name, index) in chatLogs" :key="index" class="fileTitle" @click="handleClickChatLog(chat_name)">
+                    {{chat_name}}
                 </div>
+
             </div>
         </div>
-        <div class="send-box">
-            <input type="text" v-model="input" @keydown.enter="sendMessage" class="send-input" placeholder="Input your message..."/>
-            <button @click="sendMessage" class="send-button">Chat</button>
+        <div class="container">
+
+            <div class="chat">
+                <div v-for="(message, index) in messages" :key="index" class="message" :class="message.side">
+                    <img class="avatar" :src="message.side === 'right' ? userAvatar : botAvatar" alt="Avatar" />
+                    <img v-if="message.image" :src="message.image" alt="Image" />
+                    <div class="content" v-html="message.content"></div>
+                    <div>
+                        <div v-if=" isLoading===true && message.side === 'right' && index === messages.length - 1" class="loader"></div>
+                        <span v-if=" isLoading===true && message.side === 'right' && index === messages.length - 1" class="">{{loaderTip}}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="send-box">
+                <input type="text" v-model="input" @keydown.enter="sendMessage" class="send-input" placeholder="Input your message..."/>
+                <button @click="sendMessage" class="send-button">Chat</button>
+            </div>
         </div>
     </div>
 </template>
@@ -38,6 +50,7 @@ let input = ref('');
 let messages = ref([]);
 let timerId;
 let delay = 100000;
+let chatLogs = ref([]);
 
 import { getCurrentInstance } from 'vue'
 const { appContext } = getCurrentInstance()
@@ -52,6 +65,9 @@ md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
 
 let socket = io.connect(myUrl);
 let lastQuestion;
+
+
+
 socket.on('connect', function() {
     console.log("connected！")
 });
@@ -83,6 +99,33 @@ socket.on('disconnect', function() {
 
     console.log('已断开与服务器的连接');
 });
+
+function handleClickChatLog(chat_name){
+    console.log(chat_name);
+    axios.post(myUrl+'/chatHistory',
+        {
+            username: localStorage.getItem('inviteCode'),
+            time: chat_name,
+        })
+        .then(response => {
+            console.log("get");
+            let chat_history = response.data.history;
+            for(let i = 0;i < chat_history.length;i++){
+                 let chat = chat_history[i];
+                 messages.value.push({ side: 'right', content: chat.question });
+                 const image = chat.image ? 'data:image/png;base64,' + chat.image : null;
+                 const reply = markdownToHtml(chat.response);
+                 messages.value.push({ side: 'left', content: reply, image });
+            }
+            scrollToBottom();
+
+
+        })
+        .catch(error => {
+            console.error('Error:', error);
+
+        });
+}
 
 function handleBack() {
     router.push('/login');
@@ -145,21 +188,27 @@ onUpdated(() => {
 onMounted(()=>{
     console.log("mounted")
 
-    axios.post(myUrl+'/chatHistory',
+    axios.post(myUrl+'/chatHistoryList',
         {
         username: localStorage.getItem('inviteCode'),
         })
         .then(response => {
            console.log("get");
-           let chat_history = response.data.history;
-           for(let i = 0;i < chat_history.length;i++){
-               let chat = chat_history[i];
-               messages.value.push({ side: 'right', content: chat.question });
-               const image = chat.image ? 'data:image/png;base64,' + chat.image : null;
-               const reply = markdownToHtml(chat.response);
-               messages.value.push({ side: 'left', content: reply, image });
-           }
-            scrollToBottom();
+           // let chat_history = response.data.history;
+           // for(let i = 0;i < chat_history.length;i++){
+           //     let chat = chat_history[i];
+           //     messages.value.push({ side: 'right', content: chat.question });
+           //     const image = chat.image ? 'data:image/png;base64,' + chat.image : null;
+           //     const reply = markdownToHtml(chat.response);
+           //     messages.value.push({ side: 'left', content: reply, image });
+           // }
+           //  scrollToBottom();
+            let history_list = response.data.history_list;
+            // for (let k = 0;k < 20;k++)
+            for(let i = 0;i < history_list.length;i++){
+                chatLogs.value.push(history_list[i]);
+            }
+
         })
         .catch(error => {
             console.error('Error:', error);
@@ -187,15 +236,49 @@ html, body {
     border-radius: 50%;
     margin-right: 10px;
 }
-
+.chatpdf{
+    display: flex;
+    height: 100vh;
+    flex-direction: row;
+}
+.pannel{
+    width: 255px;
+    background-color: rgb(0, 21, 41);
+    height: 100vh;
+}
+.chatbotTitle {
+    font-size: 24px;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+}
+.sideList {
+    flex-grow: 1;
+    overflow-y: scroll;
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f6f8fa;
+    height: 50vh;
+}
+.fileTitle{
+    background-color: #6f7d91;
+    color: #fff;
+    border-radius: 8px;
+    padding: 10px;
+    margin: 10px;
+    font-size: 14px;
+    cursor: pointer;
+}
 .container {
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    width: 90%;
+    flex: 1;
     margin: 0 auto;
     padding: 20px 10px;
     background-color: #fff;
+    background-size: cover;
     font-size: 18px;
 }
 
@@ -301,15 +384,17 @@ html, body {
 
 .back-icon-container {
     position: absolute;
-    top: 1rem;
-    left: 1rem;
+    top: 0.7rem;
+    left: 0.7rem;
     z-index: 1;
+
 }
 
 .icon {
     width: 1.5rem;
     height: 1.5rem;
     cursor: pointer;
+    color: #ffffff;
 }
 
 </style>
