@@ -6,10 +6,10 @@
         <div class="pannel">
             <div class="chatbotTitle">CHATBOT</div>
             <div class="sideList">
-                <div  v-for="(chat_name, index) in chatLogs" :key="index" class="fileTitle" @click="handleClickChatLog(chat_name)">
+                <div  v-for="(chat_name, index) in chatLogs" :key="index" :class="{'chatLogList': selectedChat !== chat_name, 'selectedChatLog': selectedChat === chat_name}" @click="handleClickChatLog(chat_name)">
                     {{chat_name}}
                 </div>
-
+                <div class="addChatLog" @click="createNewChatLog()">+ New Chat</div>
             </div>
         </div>
         <div class="container">
@@ -51,6 +51,8 @@ let messages = ref([]);
 let timerId;
 let delay = 100000;
 let chatLogs = ref([]);
+let selectedChat = ref("")
+
 
 import { getCurrentInstance } from 'vue'
 const { appContext } = getCurrentInstance()
@@ -100,8 +102,38 @@ socket.on('disconnect', function() {
     console.log('已断开与服务器的连接');
 });
 
+function get_date(){
+    // 创建 Date 对象
+    const currentDate = new Date();
+
+// 获取年、月、日、时、分、秒
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // 月份从0开始，需要加1，并且补零
+    const day = String(currentDate.getDate()).padStart(2, '0'); // 需要补零
+    const hours = String(currentDate.getHours()).padStart(2, '0'); // 需要补零
+    const minutes = String(currentDate.getMinutes()).padStart(2, '0'); // 需要补零
+    const seconds = String(currentDate.getSeconds()).padStart(2, '0'); // 需要补零
+
+// 格式化为指定格式
+    const formattedDateTime = `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+
+// 输出结果
+    console.log(formattedDateTime);
+    return formattedDateTime
+}
+function createNewChatLog(){
+    let _date = get_date()
+    selectedChat.value = _date;
+    chatLogs.value.push(_date);
+    messages.value = [];
+}
+
+
 function handleClickChatLog(chat_name){
     console.log(chat_name);
+    messages.value = [];
+    selectedChat.value = chat_name;
+
     axios.post(myUrl+'/chatHistory',
         {
             username: localStorage.getItem('inviteCode'),
@@ -132,6 +164,8 @@ function handleBack() {
 }
 
 function sendMessage() {
+    if(selectedChat.value === "" )
+        createNewChatLog()
     const msg = input.value;
     input.value = '';
     lastQuestion = msg;
@@ -163,7 +197,8 @@ function chatbotReply(msg) {
         let userName = localStorage.getItem('inviteCode')
 
         //console.log(userName)
-        socket.emit('message', {"username": userName,"data": msg});
+
+        socket.emit('message', {"username": userName, "time": selectedChat.value, "data": msg});
         //socket.emit('message', {"data": msg});
     } catch (error) {
         console.error(error);
@@ -256,19 +291,39 @@ html, body {
     flex-grow: 1;
     overflow-y: scroll;
     margin-bottom: 20px;
-    padding: 20px;
+    padding: 5px;
     border: 1px solid #ccc;
     border-radius: 5px;
     background-color: #f6f8fa;
     height: 50vh;
 }
-.fileTitle{
-    background-color: #6f7d91;
+.chatLogList{
+    background-color: #6a6a6c;
     color: #fff;
     border-radius: 8px;
-    padding: 10px;
-    margin: 10px;
+    padding: 20px;
+    margin: 5px;
     font-size: 14px;
+    cursor: pointer;
+}
+.selectedChatLog{
+    background-color: #1e85df;
+    color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 5px;
+    font-size: 14px;
+    cursor: pointer;
+}
+.addChatLog{
+    background-color:#fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 5px;
+    font-size: 15px;
+    font-weight: bold;
+    text-align: center;
+    border: 2px dashed #000000;
     cursor: pointer;
 }
 .container {
