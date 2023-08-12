@@ -105,6 +105,19 @@ def load_history_list(username):
     return chat_lists
 
 
+def delete_chat_log(file_name):
+    folder_path = "./history"
+
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+    file_path = './history/' + file_name
+
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        print("file removed")
+    else:
+        print("failure")
 
 
 #

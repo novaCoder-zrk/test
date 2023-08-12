@@ -7,7 +7,14 @@
             <div class="chatbotTitle">CHATBOT</div>
             <div class="sideList">
                 <div  v-for="(chat_name, index) in chatLogs" :key="index" :class="{'chatLogList': selectedChat !== chat_name, 'selectedChatLog': selectedChat === chat_name}" @click="handleClickChatLog(chat_name)">
-                    {{chat_name}}
+                    <div class="chatLogListItem">
+                        <div>
+                            {{chat_name}}
+                        </div>
+                        <div>
+                            <img class="delete_icon" src="../assets/delete.svg" alt="delete" @click.stop="handleDeleteChatLog(chat_name)">
+                        </div>
+                    </div>
                 </div>
                 <div class="addChatLog" @click="createNewChatLog()">+ New Chat</div>
             </div>
@@ -77,6 +84,7 @@ socket.on('connect', function() {
 socket.on('response',function(msg){
 
     console.log(msg)
+    console.log(lastQuestion)
     if(msg.question !== lastQuestion)
         return;
     const image = msg.image ? 'data:image/png;base64,' + msg.image : null;
@@ -101,6 +109,28 @@ socket.on('disconnect', function() {
 
     console.log('已断开与服务器的连接');
 });
+
+function handleDeleteChatLog(chat_name){
+    if (chat_name === selectedChat.value){
+        selectedChat.value = "";
+        messages.value = [];
+    }
+    chatLogs.value.splice(chatLogs.value.indexOf(chat_name), 1);
+    axios.post(myUrl+'/deleteChatLog',
+        {
+            username: localStorage.getItem('inviteCode'),
+            time: chat_name,
+        })
+        .then(response => {
+            console.log("delete");
+
+        })
+        .catch(error => {
+            console.error('Error:', error);
+
+        });
+
+}
 
 function get_date(){
     // 创建 Date 对象
@@ -295,7 +325,7 @@ html, body {
     border: 1px solid #ccc;
     border-radius: 5px;
     background-color: #f6f8fa;
-    height: 50vh;
+    height: 70vh;
 }
 .chatLogList{
     background-color: #6a6a6c;
@@ -450,6 +480,18 @@ html, body {
     height: 1.5rem;
     cursor: pointer;
     color: #ffffff;
+}
+
+.delete_icon{
+    width: 1.5rem;
+    height: 1.5rem;
+    color: #ffffff;
+}
+
+.chatLogListItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 </style>

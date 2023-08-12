@@ -7,7 +7,7 @@ from flask.views import MethodView
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from email_sender import sending
 from verify_code_handler import check_verify_code, generate_verify_code, check_verify_code_register
-from history import save_historyfordays, save_history, load_history, load_history_list
+from history import save_historyfordays, save_history, load_history, load_history_list, delete_chat_log
 from traceback import format_exc
 from sql_tool import *
 import os
@@ -34,8 +34,7 @@ jwt = JWTManager(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 try:
-    #chatbot = ChatbotBackend()
-    chatbot = None
+    chatbot = ChatbotBackend()
 except Exception as e:
     logger.error("An error occurred: " + str(e), exc_info=True)
 
@@ -94,8 +93,7 @@ def handle_message(message):
     print(message['data'])
 
     try:
-        #response = chatbot.generate_response(message['data'])
-        response = "hello world!"
+        response = chatbot.generate_response(message['data'])
     except Exception as e:
         logger.error("An error occurred: " + str(e), exc_info=True)
 
@@ -308,6 +306,17 @@ class ChatHistoryList(MethodView):
         return {'history_list': chat_history_list}
 
 
+class DeleteChatLog(MethodView):
+    def post(self):
+        username = request.json.get('username')
+        time = request.json.get('time')
+        print(time)
+        file_name = username + "_" + time[0:4] + time[5:7] + time[8:10] + time[11:13] + time[14:16] + time[17:19] + ".json"
+        print(file_name)
+        delete_chat_log(file_name)
+        return {"delte": "ok"}
+
+
 register_api = RegisterApi.as_view('register_api')
 app.add_url_rule('/register', view_func=register_api, methods=['POST'])
 
@@ -331,6 +340,9 @@ app.add_url_rule('/chatHistory', view_func=chat_history_api, methods=['POST'])
 
 chat_history_list_api = ChatHistoryList.as_view('chat_history_list_api')
 app.add_url_rule('/chatHistoryList', view_func=chat_history_list_api, methods=['POST'])
+
+delete_chat_log_api = DeleteChatLog.as_view('delete_chat_log_api')
+app.add_url_rule('/deleteChatLog', view_func=delete_chat_log_api, methods=['POST'])
 
 if __name__ == '__main__':
     app.run()
