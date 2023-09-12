@@ -1,7 +1,7 @@
 from flask import Flask, request
 from flask_cors import CORS
 from flask.views import MethodView
-from PIL import Image
+from PIL imporrtretreterter4tertet Image
 import base64
 import io
 import time
